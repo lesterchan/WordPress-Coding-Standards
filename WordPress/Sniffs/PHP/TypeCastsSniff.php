@@ -38,7 +38,6 @@ class TypeCastsSniff extends Sniff {
 		return array(
 			\T_DOUBLE_CAST,
 			\T_UNSET_CAST,
-			\T_STRING_CAST,
 			\T_BINARY_CAST,
 		);
 	}
@@ -73,19 +72,14 @@ class TypeCastsSniff extends Sniff {
 				break;
 
 			case \T_UNSET_CAST:
-				$this->phpcsFile->addWarning(
-					'Using the "(unset)" cast is strongly discouraged. Use the "unset()" language construct or assign "null" as the value to the variable instead.',
+				$this->phpcsFile->addError(
+					'Using the "(unset)" cast is forbidden as the type cast is removed in PHP 8. Use the "unset()" language construct or assign "null" as the value to the variable instead.',
 					$stackPtr,
 					'UnsetFound'
 				);
 				break;
 
-			case \T_STRING_CAST:
 			case \T_BINARY_CAST:
-				if ( \T_STRING_CAST === $token_code && '(binary)' !== $typecast_lc ) {
-					break;
-				}
-
 				$this->phpcsFile->addWarning(
 					'Using binary casting is strongly discouraged. Found: "%s"',
 					$stackPtr,

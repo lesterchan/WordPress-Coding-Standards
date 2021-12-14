@@ -9,9 +9,11 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
-use WordPressCS\WordPress\AbstractFunctionRestrictionsSniff;
-use WordPressCS\WordPress\PHPCSHelper;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\BackCompat\Helper;
+use PHPCSUtils\Utils\TextStrings;
+use XMLReader;
+use WordPressCS\WordPress\AbstractFunctionRestrictionsSniff;
 
 /**
  * Makes sure WP internationalization functions are used properly.
@@ -191,9 +193,12 @@ class I18nSniff extends AbstractFunctionRestrictionsSniff {
 		$this->text_domain_is_default       = false;
 
 		// Allow overruling the text_domain set in a ruleset via the command line.
-		$cl_text_domain = trim( PHPCSHelper::get_config_data( 'text_domain' ) );
+		$cl_text_domain = Helper::getConfigData( 'text_domain' );
 		if ( ! empty( $cl_text_domain ) ) {
-			$this->text_domain = array_filter( array_map( 'trim', explode( ',', $cl_text_domain ) ) );
+			$cl_text_domain = trim( $cl_text_domain );
+			if ( '' !== $cl_text_domain ) {
+				$this->text_domain = array_filter( array_map( 'trim', explode( ',', $cl_text_domain ) ) );
+			}
 		}
 
 		$this->text_domain = $this->merge_custom_array( $this->text_domain, array(), false );
@@ -477,7 +482,7 @@ class I18nSniff extends AbstractFunctionRestrictionsSniff {
 
 		if ( isset( Tokens::$textStringTokens[ $tokens[0]['code'] ] ) ) {
 			if ( 'domain' === $arg_name && ! empty( $this->text_domain ) ) {
-				$stripped_content = $this->strip_quotes( $content );
+				$stripped_content = TextStrings::stripQuotes( $content );
 
 				if ( ! \in_array( $stripped_content, $this->text_domain, true ) ) {
 					$this->addMessage(
@@ -630,7 +635,7 @@ class I18nSniff extends AbstractFunctionRestrictionsSniff {
 		 *
 		 * Strip placeholders and surrounding quotes.
 		 */
-		$content_without_quotes  = trim( $this->strip_quotes( $content ) );
+		$content_without_quotes  = trim( TextStrings::stripQuotes( $content ) );
 		$non_placeholder_content = preg_replace( self::SPRINTF_PLACEHOLDER_REGEX, '', $content_without_quotes );
 
 		if ( '' === $non_placeholder_content ) {
@@ -643,11 +648,11 @@ class I18nSniff extends AbstractFunctionRestrictionsSniff {
 		 *
 		 * Strip surrounding quotes.
 		 */
-		$reader = new \XMLReader();
-		$reader->XML( $content_without_quotes, 'UTF-8', LIBXML_NOERROR | LIBXML_ERR_NONE | LIBXML_NOWARNING );
+		$reader = new XMLReader();
+		$reader->XML( $content_without_quotes, 'UTF-8', \LIBXML_NOERROR | \LIBXML_ERR_NONE | \LIBXML_NOWARNING );
 
 		// Is the first node an HTML element?
-		if ( ! $reader->read() || \XMLReader::ELEMENT !== $reader->nodeType ) {
+		if ( ! $reader->read() || XMLReader::ELEMENT !== $reader->nodeType ) {
 			return;
 		}
 

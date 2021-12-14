@@ -9,8 +9,12 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\Lists;
+use PHPCSUtils\Utils\Scopes;
+use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Sniff;
+use WordPressCS\WordPress\Helpers\IsUnitTestTrait;
 
 /**
  * Warns about overwriting WordPress native global variables.
@@ -26,9 +30,11 @@ use PHP_CodeSniffer\Util\Tokens;
  * @since   1.1.0  The sniff now also detects variables being overriden in the global namespace.
  * @since   2.2.0  The sniff now also detects variable assignments via the list() construct.
  *
- * @uses    \WordPressCS\WordPress\Sniff::$custom_test_class_whitelist
+ * @uses    \WordPressCS\WordPress\Helpers\IsUnitTestTrait::$custom_test_classes
  */
 class GlobalVariablesOverrideSniff extends Sniff {
+
+	use IsUnitTestTrait;
 
 	/**
 	 * Whether to treat all files as if they were included from
@@ -117,7 +123,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 		// Ignore variable overrides in test classes.
 		if ( isset( Tokens::$ooScopeTokens[ $token['code'] ] ) ) {
 
-			if ( true === $this->is_test_class( $stackPtr )
+			if ( true === $this->is_test_class( $this->phpcsFile, $stackPtr )
 				&& $token['scope_condition'] === $stackPtr
 				&& isset( $token['scope_closer'] )
 			) {
@@ -170,7 +176,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 	 *                  normal file processing.
 	 */
 	protected function process_list_assignment( $stackPtr ) {
-		$list_open_close = $this->find_list_open_close( $stackPtr );
+		$list_open_close = Lists::getOpenClose( $this->phpcsFile, $stackPtr );
 		if ( false === $list_open_close ) {
 			// Short array, not short list.
 			return;
@@ -197,10 +203,6 @@ class GlobalVariablesOverrideSniff extends Sniff {
 	 * @return void
 	 */
 	protected function process_variable_assignment( $stackPtr, $in_list = false ) {
-
-		if ( $this->has_whitelist_comment( 'override', $stackPtr ) === true ) {
-			return;
-		}
 
 		$token    = $this->tokens[ $stackPtr ];
 		$var_name = substr( $token['content'], 1 ); // Strip the dollar sign.
@@ -230,7 +232,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 				}
 
 				if ( \T_CONSTANT_ENCAPSED_STRING === $this->tokens[ $ptr ]['code'] ) {
-					$var_name .= $this->strip_quotes( $this->tokens[ $ptr ]['content'] );
+					$var_name .= TextStrings::stripQuotes( $this->tokens[ $ptr ]['content'] );
 				}
 			}
 
@@ -286,7 +288,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 		/*
 		 * Class property declarations with the same name as WP global variables are fine.
 		 */
-		if ( false === $in_list && true === $this->is_class_property( $stackPtr ) ) {
+		if ( false === $in_list && true === Scopes::isOOProperty( $this->phpcsFile, $stackPtr ) ) {
 			return;
 		}
 
@@ -371,7 +373,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 			if ( \T_LIST === $this->tokens[ $ptr ]['code']
 				|| \T_OPEN_SHORT_ARRAY === $this->tokens[ $ptr ]['code']
 			) {
-				$list_open_close = $this->find_list_open_close( $ptr );
+				$list_open_close = Lists::getOpenClose( $this->phpcsFile, $ptr );
 
 				if ( false === $list_open_close ) {
 					// Short array, not short list.
@@ -382,7 +384,7 @@ class GlobalVariablesOverrideSniff extends Sniff {
 				foreach ( $var_pointers as $ptr ) {
 					$var_name = $this->tokens[ $ptr ]['content'];
 					if ( '$GLOBALS' === $var_name ) {
-						$var_name = '$' . $this->strip_quotes( $this->get_array_access_key( $ptr ) );
+						$var_name = '$' . TextStrings::stripQuotes( $this->get_array_access_key( $ptr ) );
 					}
 
 					if ( \in_array( $var_name, $search, true ) ) {
@@ -410,31 +412,14 @@ class GlobalVariablesOverrideSniff extends Sniff {
 			}
 
 			if ( true === $this->is_assignment( $ptr ) ) {
-				$this->maybe_add_error( $ptr );
+				$this->add_error( $ptr );
 				continue;
 			}
 
 			// Check if this is a variable assignment within a `foreach()` declaration.
 			if ( $this->is_foreach_as( $ptr ) === true ) {
-				$this->maybe_add_error( $ptr );
+				$this->add_error( $ptr );
 			}
-		}
-	}
-
-	/**
-	 * Add the error if there is no whitelist comment present.
-	 *
-	 * @since 0.11.0
-	 * @since 1.1.0  - Visibility changed from public to protected.
-	 *               - Check for being in a test class moved to the process_token() method.
-	 *
-	 * @param int $stackPtr The position of the token to throw the error for.
-	 *
-	 * @return void
-	 */
-	protected function maybe_add_error( $stackPtr ) {
-		if ( $this->has_whitelist_comment( 'override', $stackPtr ) === false ) {
-			$this->add_error( $stackPtr );
 		}
 	}
 

@@ -9,6 +9,7 @@
 
 namespace WordPressCS\WordPress;
 
+use PHPCSUtils\Utils\Namespaces;
 use WordPressCS\WordPress\AbstractFunctionRestrictionsSniff;
 
 /**
@@ -149,7 +150,7 @@ abstract class AbstractClassRestrictionsSniff extends AbstractFunctionRestrictio
 			return false;
 		}
 
-		// Nothing to do if 'parent', 'self' or 'static'.
+		// Nothing to do if one of the hierarchy keywords - 'parent', 'self' or 'static' - is used.
 		if ( \in_array( $classname, array( 'parent', 'self', 'static' ), true ) ) {
 			return false;
 		}
@@ -229,7 +230,7 @@ abstract class AbstractClassRestrictionsSniff extends AbstractFunctionRestrictio
 			// No namespace keyword found at all, so global namespace.
 			$classname = '\\' . $classname;
 		} else {
-			$namespace = $this->determine_namespace( $search_from );
+			$namespace = Namespaces::determineNamespace( $this->phpcsFile, $search_from );
 
 			if ( ! empty( $namespace ) ) {
 				$classname = '\\' . $namespace . '\\' . $classname;

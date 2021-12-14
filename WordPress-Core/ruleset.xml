@@ -7,6 +7,15 @@
 	<arg name="tab-width" value="4"/>
 
 	<!--
+		 Trigger error if PHPCSUtils cannot be found.
+		 PHPCSUtils does not contain any sniffs, so this rule isn't strictly necessary, but
+		 by having this here anyway, if PHPCSUtils is missing, the user will get a
+		 descriptive error message during the loading of the ruleset instead of
+		 a fatal "class not found" error once the sniffs start running.
+	-->
+	<rule ref="PHPCSUtils"/>
+
+	<!--
 	#############################################################################
 	Handbook: PHP - Single and Double Quotes.
 	Ref: https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/#single-and-double-quotes
@@ -69,7 +78,7 @@
 	</rule>
 
 	<!-- Covers rule: ... while spaces can be used mid-line for alignment. -->
-	<rule ref="WordPress.WhiteSpace.DisallowInlineTabs"/>
+	<rule ref="Universal.WhiteSpace.DisallowInlineTabs"/>
 
 	<!-- Implied through the examples: align the assignment operator in a block of assignments. -->
 	<rule ref="Generic.Formatting.MultipleStatementAlignment">
@@ -106,7 +115,7 @@
 	#############################################################################
 	-->
 	<!-- Covers rule: Arrays must be declared using long array syntax. -->
-	<rule ref="Generic.Arrays.DisallowShortArraySyntax"/>
+	<rule ref="Universal.Arrays.DisallowShortArraySyntax"/>
 
 
 	<!--
@@ -378,7 +387,7 @@
 		 https://github.com/WordPress/WordPress-Coding-Standards/issues/643 -->
 
 	<!-- Rule: The short ternary operator must not be used. -->
-	<rule ref="WordPress.PHP.DisallowShortTernary"/>
+	<rule ref="Universal.Operators.DisallowShortTernary"/>
 
 	<!--
 	#############################################################################
@@ -406,7 +415,9 @@
 
 	<!-- Rule: Unless absolutely necessary, loose comparisons should not be used,
 		 as their behaviour can be misleading. -->
-	<rule ref="WordPress.PHP.StrictComparisons"/>
+	<rule phpcs-only="true" ref="Universal.Operators.StrictComparisons">
+		<type>warning</type>
+	</rule>
 	<rule ref="WordPress.PHP.StrictInArray"/>
 
 	<!-- Rule: Assignments must not be placed in placed in conditionals.
@@ -479,7 +490,7 @@
 	<rule ref="Squiz.WhiteSpace.SemicolonSpacing"/>
 
 	<!-- There should be no empty statements, i.e. lone semi-colons or open/close tags without content. -->
-	<rule ref="WordPress.CodeAnalysis.EmptyStatement"/>
+	<rule ref="Generic.CodeAnalysis.EmptyPHPStatement"/>
 
 	<!-- Lowercase PHP constants, like true, false and null. -->
 	<!-- https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/#naming-conventions -->
@@ -504,6 +515,12 @@
 	<rule ref="Squiz.Classes.SelfMemberReference"/>
 	<rule ref="Squiz.Classes.SelfMemberReference.NotUsed">
 		<severity>0</severity>
+	</rule>
+
+	<!-- Encourage having only one class/interface/trait per file.
+		 Moved from Extra to Core after discussion on Slack. -->
+	<rule ref="Generic.Files.OneObjectStructurePerFile">
+		<message>Best practices: Declare only one class/interface/trait in a file.</message>
 	</rule>
 
 	<!--

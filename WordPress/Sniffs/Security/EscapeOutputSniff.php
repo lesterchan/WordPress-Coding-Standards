@@ -11,6 +11,8 @@ namespace WordPressCS\WordPress\Sniffs\Security;
 
 use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\PassedParameters;
+use PHPCSUtils\Utils\TextStrings;
 
 /**
  * Verifies that all outputted strings are escaped.
@@ -194,7 +196,12 @@ class EscapeOutputSniff extends Sniff {
 
 			// These functions only need to have the first argument escaped.
 			if ( \in_array( $function, array( 'trigger_error', 'user_error' ), true ) ) {
-				$first_param      = $this->get_function_call_parameter( $stackPtr, 1 );
+				$first_param = PassedParameters::getParameter( $this->phpcsFile, $stackPtr, 1 );
+				if ( false === $first_param ) {
+					// First parameter doesn't exist. Nothing to do.
+					return;
+				}
+
 				$end_of_statement = ( $first_param['end'] + 1 );
 				unset( $first_param );
 			}
@@ -204,19 +211,18 @@ class EscapeOutputSniff extends Sniff {
 			 * pattern, it doesn't need to be escaped.
 			 */
 			if ( '_deprecated_file' === $function ) {
-				$first_param = $this->get_function_call_parameter( $stackPtr, 1 );
+				$first_param = PassedParameters::getParameter( $this->phpcsFile, $stackPtr, 1 );
+				if ( false === $first_param ) {
+					// First parameter doesn't exist. Nothing to do.
+					return;
+				}
 
 				// Quick check. This disregards comments.
-				if ( preg_match( '`^basename\s*\(\s*__FILE__\s*\)$`', $first_param['raw'] ) === 1 ) {
+				if ( preg_match( '`^[\\\\]?basename\s*\(\s*__FILE__\s*\)$`', $first_param['raw'] ) === 1 ) {
 					$stackPtr = ( $first_param['end'] + 2 );
 				}
 				unset( $first_param );
 			}
-		}
-
-		// Checking for the ignore comment, ex: //xss ok.
-		if ( $this->has_whitelist_comment( 'xss', $stackPtr ) ) {
-			return;
 		}
 
 		if ( isset( $this->unsafePrintingFunctions[ $function ] ) ) {
@@ -385,7 +391,8 @@ class EscapeOutputSniff extends Sniff {
 					if ( isset( $this->arrayWalkingFunctions[ $functionName ] ) ) {
 
 						// Get the callback parameter.
-						$callback = $this->get_function_call_parameter(
+						$callback = PassedParameters::getParameter(
+							$this->phpcsFile,
 							$ptr,
 							$this->arrayWalkingFunctions[ $functionName ]
 						);
@@ -405,7 +412,7 @@ class EscapeOutputSniff extends Sniff {
 							if ( false !== $mapped_function
 								&& \T_CONSTANT_ENCAPSED_STRING === $this->tokens[ $mapped_function ]['code']
 							) {
-								$functionName = $this->strip_quotes( $this->tokens[ $mapped_function ]['content'] );
+								$functionName = TextStrings::stripQuotes( $this->tokens[ $mapped_function ]['content'] );
 								$ptr          = $mapped_function;
 							}
 						}
@@ -456,7 +463,7 @@ class EscapeOutputSniff extends Sniff {
 				"All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '%s'.",
 				$ptr,
 				'OutputNotEscaped',
-				$content
+				array( $content )
 			);
 		}
 

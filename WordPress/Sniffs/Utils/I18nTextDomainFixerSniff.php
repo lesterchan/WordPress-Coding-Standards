@@ -11,6 +11,7 @@ namespace WordPressCS\WordPress\Sniffs\Utils;
 
 use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\TextStrings;
 
 /**
  * Comprehensive I18n text domain fixer tool.
@@ -341,7 +342,7 @@ class I18nTextDomainFixerSniff extends AbstractFunctionParameterSniff {
 			// Examine for plugin/theme file header.
 			return $this->process_comments( $stackPtr );
 
-		} elseif ( 'CSS' !== $this->phpcsFile->tokenizerType ) {
+		} elseif ( isset( $this->phpcsFile->tokenizerType ) === false || 'CSS' !== $this->phpcsFile->tokenizerType ) {
 			// Examine a T_STRING token in a PHP file as a function call.
 			return parent::process_token( $stackPtr );
 		}
@@ -436,7 +437,7 @@ class I18nTextDomainFixerSniff extends AbstractFunctionParameterSniff {
 		}
 
 		// If we're still here, this means only one T_CONSTANT_ENCAPSED_STRING was found.
-		$old_domain = $this->strip_quotes( $this->tokens[ $domain_token ]['content'] );
+		$old_domain = TextStrings::stripQuotes( $this->tokens[ $domain_token ]['content'] );
 
 		if ( ! \in_array( $old_domain, $this->old_text_domain, true ) ) {
 			// Not a text domain targetted for replacement, ignore.
@@ -545,13 +546,13 @@ class I18nTextDomainFixerSniff extends AbstractFunctionParameterSniff {
 		$type    = 'plugin';
 		$skip_to = $stackPtr;
 
-		$file = $this->strip_quotes( $this->phpcsFile->getFileName() );
+		$file = TextStrings::stripQuotes( $this->phpcsFile->getFileName() );
 		if ( 'STDIN' === $file ) {
 			return;
 		}
 
 		$file_name = basename( $file );
-		if ( 'CSS' === $this->phpcsFile->tokenizerType ) {
+		if ( isset( $this->phpcsFile->tokenizerType ) && 'CSS' === $this->phpcsFile->tokenizerType ) {
 			if ( 'style.css' !== $file_name && ! defined( 'PHP_CODESNIFFER_IN_TESTS' ) ) {
 				// CSS files only need to be examined for the file header.
 				return ( $this->phpcsFile->numTokens + 1 );

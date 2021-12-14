@@ -8,7 +8,7 @@ $wpdb = 'test'; // Bad.
 $post = get_post( 1 ); // Bad.
 
 global $post;
-$post = get_post( 1 ); // Override ok.
+$post = get_post( 1 ); // Bad: old-style ignore comment. Override ok.
 
 // Bad: Using different types of assignment operators.
 function test_different_assignment_operators() {
@@ -108,7 +108,7 @@ trait My_Class {
 }
 
 // Test adding additional test classes to the whitelist.
-// phpcs:set WordPress.WP.GlobalVariablesOverride custom_test_class_whitelist[] My_TestClass
+// phpcs:set WordPress.WP.GlobalVariablesOverride custom_test_classes[] My_TestClass
 class Test_Class_D extends My_TestClass {
 
 	public function test_something() {
@@ -116,7 +116,7 @@ class Test_Class_D extends My_TestClass {
 		$tabs = 50; // Ok.
 	}
 }
-// phpcs:set WordPress.WP.GlobalVariablesOverride custom_test_class_whitelist[]
+// phpcs:set WordPress.WP.GlobalVariablesOverride custom_test_classes[]
 
 // Test detecting within and skipping over anonymous classes.
 global $year;

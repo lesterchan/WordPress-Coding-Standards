@@ -11,6 +11,7 @@ namespace WordPressCS\WordPress\Sniffs\WhiteSpace;
 
 use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\UseStatements;
 
 /**
  * Enforces spacing around logical operators and assignments, based upon Squiz code.
@@ -113,6 +114,12 @@ class ControlStructureSpacingSniff extends Sniff {
 	public function process_token( $stackPtr ) {
 		$this->spaces_before_closure_open_paren = (int) $this->spaces_before_closure_open_paren;
 
+		if ( \T_USE === $this->tokens[ $stackPtr ]['code']
+			&& UseStatements::isClosureUse( $this->phpcsFile, $stackPtr ) === false
+		) {
+			return;
+		}
+
 		if ( isset( $this->tokens[ ( $stackPtr + 1 ) ] ) && \T_WHITESPACE !== $this->tokens[ ( $stackPtr + 1 ) ]['code']
 			&& ! ( \T_ELSE === $this->tokens[ $stackPtr ]['code'] && \T_COLON === $this->tokens[ ( $stackPtr + 1 ) ]['code'] )
 			&& ! ( \T_CLOSURE === $this->tokens[ $stackPtr ]['code']
@@ -128,7 +135,7 @@ class ControlStructureSpacingSniff extends Sniff {
 
 		if ( ! isset( $this->tokens[ $stackPtr ]['scope_closer'] ) ) {
 
-			if ( \T_USE === $this->tokens[ $stackPtr ]['code'] && 'closure' === $this->get_use_type( $stackPtr ) ) {
+			if ( \T_USE === $this->tokens[ $stackPtr ]['code'] ) {
 				$scopeOpener = $this->phpcsFile->findNext( \T_OPEN_CURLY_BRACKET, ( $stackPtr + 1 ) );
 				$scopeCloser = $this->tokens[ $scopeOpener ]['scope_closer'];
 			} elseif ( \T_WHILE !== $this->tokens[ $stackPtr ]['code'] ) {
@@ -176,7 +183,7 @@ class ControlStructureSpacingSniff extends Sniff {
 
 			} elseif ( \T_BITWISE_AND === $this->tokens[ $parenthesisOpener ]['code'] ) {
 
-				// This function returns by reference (function &function_name() {}).
+				// This function returns by reference, i.e. `function &function_name() {}`.
 				$parenthesisOpener = $this->phpcsFile->findNext(
 					Tokens::$emptyTokens,
 					( $parenthesisOpener + 1 ),
@@ -194,7 +201,7 @@ class ControlStructureSpacingSniff extends Sniff {
 					true
 				);
 
-				// Checking this: function my_function[*](...) {}.
+				// Checking space between name and open parentheses, i.e. `function my_function[*](...) {}`.
 				if ( ( $function_name_ptr + 1 ) !== $parenthesisOpener ) {
 
 					$error = 'Space between function name and opening parenthesis is prohibited.';
@@ -202,7 +209,7 @@ class ControlStructureSpacingSniff extends Sniff {
 						$error,
 						$stackPtr,
 						'SpaceBeforeFunctionOpenParenthesis',
-						$this->tokens[ ( $function_name_ptr + 1 ) ]['content']
+						array( $this->tokens[ ( $function_name_ptr + 1 ) ]['content'] )
 					);
 
 					if ( true === $fix ) {
@@ -240,7 +247,7 @@ class ControlStructureSpacingSniff extends Sniff {
 			) {
 
 				if ( ( $stackPtr + 1 ) !== $parenthesisOpener ) {
-					// Checking this: function[*](...) {}.
+					// Checking space between keyword and open parenthesis, i.e. `function[*](...) {}`.
 					$error = 'Space before closure opening parenthesis is prohibited';
 					$fix   = $this->phpcsFile->addFixableError( $error, $stackPtr, 'SpaceBeforeClosureOpenParenthesis' );
 
@@ -256,7 +263,7 @@ class ControlStructureSpacingSniff extends Sniff {
 				&& ( $stackPtr + 1 ) === $parenthesisOpener
 			) {
 
-				// Checking this: if[*](...) {}.
+				// Checking space between keyword and open parenthesis, i.e. `if[*](...) {}`.
 				$error = 'No space before opening parenthesis is prohibited';
 				$fix   = $this->phpcsFile->addFixableError( $error, $stackPtr, 'NoSpaceBeforeOpenParenthesis' );
 
@@ -269,13 +276,13 @@ class ControlStructureSpacingSniff extends Sniff {
 		if ( \T_WHITESPACE === $this->tokens[ ( $stackPtr + 1 ) ]['code']
 			&& ' ' !== $this->tokens[ ( $stackPtr + 1 ) ]['content']
 		) {
-			// Checking this: if [*](...) {}.
+			// Checking (too much) space between keyword and open parenthesis, i.e. `if [*](...) {}`.
 			$error = 'Expected exactly one space before opening parenthesis; "%s" found.';
 			$fix   = $this->phpcsFile->addFixableError(
 				$error,
 				$stackPtr,
 				'ExtraSpaceBeforeOpenParenthesis',
-				$this->tokens[ ( $stackPtr + 1 ) ]['content']
+				array( $this->tokens[ ( $stackPtr + 1 ) ]['content'] )
 			);
 
 			if ( true === $fix ) {
@@ -285,7 +292,7 @@ class ControlStructureSpacingSniff extends Sniff {
 
 		if ( \T_CLOSE_PARENTHESIS !== $this->tokens[ ( $parenthesisOpener + 1 ) ]['code'] ) {
 			if ( \T_WHITESPACE !== $this->tokens[ ( $parenthesisOpener + 1 ) ]['code'] ) {
-				// Checking this: $value = my_function([*]...).
+				// Checking space directly after the open parenthesis, i.e. `$value = my_function([*]...)`.
 				$error = 'No space after opening parenthesis is prohibited';
 				$fix   = $this->phpcsFile->addFixableError( $error, $stackPtr, 'NoSpaceAfterOpenParenthesis' );
 
@@ -297,13 +304,13 @@ class ControlStructureSpacingSniff extends Sniff {
 				&& "\r\n" !== $this->tokens[ ( $parenthesisOpener + 1 ) ]['content'] )
 				&& ! isset( $this->ignore_extra_space_after_open_paren[ $this->tokens[ $stackPtr ]['code'] ] )
 			) {
-				// Checking this: if ([*]...) {}.
+				// Checking (too much) space directly after the open parenthesis, i.e. `if ([*]...) {}`.
 				$error = 'Expected exactly one space after opening parenthesis; "%s" found.';
 				$fix   = $this->phpcsFile->addFixableError(
 					$error,
 					$stackPtr,
 					'ExtraSpaceAfterOpenParenthesis',
-					$this->tokens[ ( $parenthesisOpener + 1 ) ]['content']
+					array( $this->tokens[ ( $parenthesisOpener + 1 ) ]['content'] )
 				);
 
 				if ( true === $fix ) {
@@ -318,7 +325,7 @@ class ControlStructureSpacingSniff extends Sniff {
 
 			if ( \T_CLOSE_PARENTHESIS !== $this->tokens[ ( $parenthesisOpener + 1 ) ]['code'] ) {
 
-				// Checking this: if (...[*]) {}.
+				// Checking space directly before the close parenthesis, i.e. `if (...[*]) {}`.
 				if ( \T_WHITESPACE !== $this->tokens[ ( $parenthesisCloser - 1 ) ]['code'] ) {
 					$error = 'No space before closing parenthesis is prohibited';
 					$fix   = $this->phpcsFile->addFixableError( $error, $parenthesisCloser, 'NoSpaceBeforeCloseParenthesis' );
@@ -334,7 +341,7 @@ class ControlStructureSpacingSniff extends Sniff {
 							$error,
 							$stackPtr,
 							'ExtraSpaceBeforeCloseParenthesis',
-							$this->tokens[ ( $parenthesisCloser - 1 ) ]['content']
+							array( $this->tokens[ ( $parenthesisCloser - 1 ) ]['content'] )
 						);
 
 						if ( true === $fix ) {
@@ -386,13 +393,13 @@ class ControlStructureSpacingSniff extends Sniff {
 				&& ' ' !== $this->tokens[ ( $parenthesisCloser + 1 ) ]['content']
 			) {
 
-				// Checking this: if (...) [*]{}.
+				// Checking space between the close parenthesis and the open brace, i.e. `if (...) [*]{}`.
 				$error = 'Expected exactly one space between closing parenthesis and opening control structure; "%s" found.';
 				$fix   = $this->phpcsFile->addFixableError(
 					$error,
 					$stackPtr,
 					'ExtraSpaceAfterCloseParenthesis',
-					$this->tokens[ ( $parenthesisCloser + 1 ) ]['content']
+					array( $this->tokens[ ( $parenthesisCloser + 1 ) ]['content'] )
 				);
 
 				if ( true === $fix ) {

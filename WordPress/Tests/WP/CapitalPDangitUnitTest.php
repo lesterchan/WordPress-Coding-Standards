@@ -59,9 +59,12 @@ class CapitalPDangitUnitTest extends AbstractSniffUnitTest {
 			101 => 1,
 			139 => 1,
 			146 => 0, // False negative.
-			167 => 1, // Whitelist comment deprecation warning.
+			167 => 1, // Old-style WPCS ignore comments are no longer supported.
 			173 => 1,
 			181 => 1,
+			203 => 1,
+			204 => 1,
+			205 => 1,
 		);
 	}
 

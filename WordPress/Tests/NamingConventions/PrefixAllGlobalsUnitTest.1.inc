@@ -181,7 +181,7 @@ class Example extends WP_UnitTestCase {
 	function do_something() {}
 }
 
-// phpcs:set WordPress.NamingConventions.PrefixAllGlobals custom_test_class_whitelist[] My_TestClass
+// phpcs:set WordPress.NamingConventions.PrefixAllGlobals custom_test_classes[] My_TestClass
 class Test_Class_D extends My_TestClass {
 
 	const SOME_CONSTANT = 'value';
@@ -190,25 +190,25 @@ class Test_Class_D extends My_TestClass {
 
 	function do_something() {}
 }
-// phpcs:set WordPress.NamingConventions.PrefixAllGlobals custom_test_class_whitelist[]
+// phpcs:set WordPress.NamingConventions.PrefixAllGlobals custom_test_classes[]
 
 
-/*
- * OK - whitelisted via whitelist comment.
- */
 if ( ! function_exists( 'intdiv' ) ) {
 	// Fill in for a PHP function which is not available in low PHP versions.
-	function intdiv() { // WPCS: prefix ok.
+	function intdiv() { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
 		// Some code.
     }
 }
 
 if ( ! defined( 'PHP_VERSION_ID' ) ) {
     $acronym_version = explode('.', PHP_VERSION);
-    define('PHP_VERSION_ID', (int) (($acronym_version[0] * 10000) + ($acronym_version[1] * 100) + $acronym_version[2])); // WPCS: prefix ok.
+    define('PHP_VERSION_ID', (int) (($acronym_version[0] * 10000) + ($acronym_version[1] * 100) + $acronym_version[2]));
     unset($acronym_version);
 }
 
+/*
+ * Bad - ignored via old-style ignore comment.
+ */
 $something = 'abc'; // WPCS: prefix ok.
 
 // Executing a WP core action or filter is sometimes ok.

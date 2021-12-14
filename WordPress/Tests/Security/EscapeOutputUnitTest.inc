@@ -121,7 +121,7 @@ wp_die( -1 ); // Ok.
 <input type="hidden" name="sync-action" class="sync-action" value="<?php echo esc_attr( $continue_sync ? 'sync_progress' : '' ); ?>" /><!-- OK. -->
 <?php
 
-// Testing whitelisting comments.
+// Bad - ignored via old-style ignore comment.
 echo $html_fragment; // Bad.
 echo $html_fragment; // xss OK.
 echo $html_fragment; // WPCS: XSS whitelist.
@@ -295,3 +295,8 @@ echo implode( '<br>', map_deep( $items, 'foo' ) ); // Bad.
 
 _deprecated_file( basename( __FILE__ ), '1.3.0' ); // Ok.
 _deprecated_file( $file, '1.3.0' ); // Error.
+
+trigger_error(); // Ignore.
+_deprecated_file(); // Ignore.
+
+\_deprecated_file( \basename( __FILE__ ), '1.3.0' ); // Ok.

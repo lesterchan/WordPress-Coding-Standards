@@ -9,9 +9,14 @@
 
 namespace WordPressCS\WordPress\Sniffs\NamingConventions;
 
-use WordPressCS\WordPress\AbstractFunctionParameterSniff;
-use WordPressCS\WordPress\PHPCSHelper;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\BackCompat\Helper;
+use PHPCSUtils\Utils\Lists;
+use PHPCSUtils\Utils\Namespaces;
+use PHPCSUtils\Utils\Scopes;
+use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\AbstractFunctionParameterSniff;
+use WordPressCS\WordPress\Helpers\IsUnitTestTrait;
 
 /**
  * Verify that everything defined in the global namespace is prefixed with a theme/plugin specific prefix.
@@ -24,9 +29,11 @@ use PHP_CodeSniffer\Util\Tokens;
  * @since   2.2.0  - Now also checks variables assigned via the list() construct.
  *                 - Now also ignores global functions which are marked as @deprecated.
  *
- * @uses    \WordPressCS\WordPress\Sniff::$custom_test_class_whitelist
+ * @uses    \WordPressCS\WordPress\Helpers\IsUnitTestTrait::$custom_test_classes
  */
 class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
+
+	use IsUnitTestTrait;
 
 	/**
 	 * Error message template.
@@ -263,23 +270,14 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 	 *                  normal file processing.
 	 */
 	public function process_token( $stackPtr ) {
-		/*
-		 * Allow for whitelisting.
-		 *
-		 * Generally speaking a theme/plugin should *only* execute their own hooks, but there may be a
-		 * good reason to execute a core hook.
-		 *
-		 * Similarly, newer PHP or WP functions or constants may need to be emulated for continued support
-		 * of older PHP and WP versions.
-		 */
-		if ( $this->has_whitelist_comment( 'prefix', $stackPtr ) ) {
-			return;
-		}
 
 		// Allow overruling the prefixes set in a ruleset via the command line.
-		$cl_prefixes = trim( PHPCSHelper::get_config_data( 'prefixes' ) );
+		$cl_prefixes = Helper::getConfigData( 'prefixes' );
 		if ( ! empty( $cl_prefixes ) ) {
-			$this->prefixes = array_filter( array_map( 'trim', explode( ',', $cl_prefixes ) ) );
+			$cl_prefixes = trim( $cl_prefixes );
+			if ( '' !== $cl_prefixes ) {
+				$this->prefixes = array_filter( array_map( 'trim', explode( ',', $cl_prefixes ) ) );
+			}
 		}
 
 		$this->prefixes = $this->merge_custom_array( $this->prefixes, array(), false );
@@ -296,7 +294,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 
 		// Ignore test classes.
 		if ( isset( Tokens::$ooScopeTokens[ $this->tokens[ $stackPtr ]['code'] ] )
-			&& true === $this->is_test_class( $stackPtr )
+			&& true === $this->is_test_class( $this->phpcsFile, $stackPtr )
 		) {
 			if ( $this->tokens[ $stackPtr ]['scope_condition'] === $stackPtr && isset( $this->tokens[ $stackPtr ]['scope_closer'] ) ) {
 				// Skip forward to end of test class.
@@ -330,7 +328,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 			return $this->process_list_assignment( $stackPtr );
 
 		} elseif ( \T_NAMESPACE === $this->tokens[ $stackPtr ]['code'] ) {
-			$namespace_name = $this->get_declared_namespace_name( $stackPtr );
+			$namespace_name = Namespaces::getDeclaredName( $this->phpcsFile, $stackPtr );
 
 			if ( false === $namespace_name || '' === $namespace_name || '\\' === $namespace_name ) {
 				return;
@@ -372,7 +370,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 		} else {
 
 			// Namespaced methods, classes and constants do not need to be prefixed.
-			$namespace = $this->determine_namespace( $stackPtr );
+			$namespace = Namespaces::determineNamespace( $this->phpcsFile, $stackPtr );
 			if ( '' !== $namespace && '\\' !== $namespace ) {
 				return;
 			}
@@ -452,7 +450,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 
 				case 'T_CONST':
 					// Constants in a class do not need to be prefixed.
-					if ( true === $this->is_class_constant( $stackPtr ) ) {
+					if ( true === Scopes::isOOConstant( $this->phpcsFile, $stackPtr ) ) {
 						return;
 					}
 
@@ -653,7 +651,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 			}
 
 			$stackPtr      = $array_key;
-			$variable_name = $this->strip_quotes( $this->tokens[ $array_key ]['content'] );
+			$variable_name = TextStrings::stripQuotes( $this->tokens[ $array_key ]['content'] );
 
 			// Check whether a prefix is needed.
 			if ( isset( Tokens::$stringTokens[ $this->tokens[ $array_key ]['code'] ] )
@@ -694,7 +692,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 			}
 
 			// Properties in a class do not need to be prefixed.
-			if ( false === $in_list && true === $this->is_class_property( $stackPtr ) ) {
+			if ( false === $in_list && true === Scopes::isOOProperty( $this->phpcsFile, $stackPtr ) ) {
 				return;
 			}
 
@@ -769,7 +767,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 	 *                  normal file processing.
 	 */
 	protected function process_list_assignment( $stackPtr ) {
-		$list_open_close = $this->find_list_open_close( $stackPtr );
+		$list_open_close = Lists::getOpenClose( $this->phpcsFile, $stackPtr );
 		if ( false === $list_open_close ) {
 			// Short array, not short list.
 			return;
@@ -804,7 +802,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 		}
 
 		$is_error    = true;
-		$raw_content = $this->strip_quotes( $parameters[1]['raw'] );
+		$raw_content = TextStrings::stripQuotes( $parameters[1]['raw'] );
 
 		if ( ( 'define' !== $matched_content
 			&& isset( $this->whitelisted_core_hooks[ $raw_content ] ) )
@@ -829,7 +827,7 @@ class PrefixAllGlobalsSniff extends AbstractFunctionParameterSniff {
 				return;
 			}
 
-			$first_non_empty_content = $this->strip_quotes( $this->tokens[ $first_non_empty ]['content'] );
+			$first_non_empty_content = TextStrings::stripQuotes( $this->tokens[ $first_non_empty ]['content'] );
 
 			// Try again with just the first token if it's a text string.
 			if ( isset( Tokens::$stringTokens[ $this->tokens[ $first_non_empty ]['code'] ] )
