@@ -17,6 +17,7 @@
 	</rule>
 	<rule ref="Universal">
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+		<exclude name="Universal.Classes.RequireFinalClass.NonFinalClassFound"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundElseWithInlineHTML"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundForeachWithInlineHTML"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundIfWithInlineHTML"/>
