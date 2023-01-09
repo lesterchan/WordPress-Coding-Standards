@@ -27,15 +27,20 @@ class DeprecatedParametersUnitTest extends AbstractSniffUnitTest {
 	 * @return array <int line number> => <int number of errors>
 	 */
 	public function getErrorList() {
-		$errors = array_fill( 28, 36, 1 );
+		$start_line = 42;
+		$end_line   = 77;
+		$errors     = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
 
 		$errors[22] = 1;
 		$errors[23] = 1;
 		$errors[24] = 1;
 
+		// Named param.
+		$errors[38] = 1;
+
 		// Override number of errors.
-		$errors[33] = 2;
-		$errors[48] = 2;
+		$errors[47] = 2;
+		$errors[61] = 2;
 
 		return $errors;
 	}
@@ -46,7 +51,10 @@ class DeprecatedParametersUnitTest extends AbstractSniffUnitTest {
 	 * @return array <int line number> => <int number of warnings>
 	 */
 	public function getWarningList() {
-		return array();
-	}
+		$start_line = 80;
+		$end_line   = 80;
+		$errors     = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
 
+		return $errors;
+	}
 }

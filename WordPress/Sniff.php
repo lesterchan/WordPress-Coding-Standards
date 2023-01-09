@@ -16,6 +16,7 @@ use PHPCSUtils\Utils\Lists;
 use PHPCSUtils\Utils\PassedParameters;
 use PHPCSUtils\Utils\Scopes;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\VariableHelper;
 
 /**
  * Represents a PHP_CodeSniffer sniff for sniffing WordPress coding standards.
@@ -37,29 +38,6 @@ use PHPCSUtils\Utils\TextStrings;
  *            is documented in the property documentation.}}
  */
 abstract class Sniff implements PHPCS_Sniff {
-
-	/**
-	 * Regex to get complex variables from T_DOUBLE_QUOTED_STRING or T_HEREDOC.
-	 *
-	 * @since 0.14.0
-	 *
-	 * @var string
-	 */
-	const REGEX_COMPLEX_VARS = '`(?:(\{)?(?<!\\\\)\$)?(\{)?(?<!\\\\)\$(\{)?(?P<varname>[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:->\$?(?P>varname)|\[[^\]]+\]|::\$?(?P>varname)|\([^\)]*\))*(?(3)\}|)(?(2)\}|)(?(1)\}|)`';
-
-	/**
-	 * List of the functions which verify nonces.
-	 *
-	 * @since 0.5.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $nonceVerificationFunctions = array(
-		'wp_verify_nonce'     => true,
-		'check_admin_referer' => true,
-		'check_ajax_referer'  => true,
-	);
 
 	/**
 	 * Functions that escape values for display.
@@ -366,14 +344,15 @@ abstract class Sniff implements PHPCS_Sniff {
 	 * @var array
 	 */
 	protected $formattingFunctions = array(
-		'array_fill' => true,
-		'ent2ncr'    => true,
-		'implode'    => true,
-		'join'       => true,
-		'nl2br'      => true,
-		'sprintf'    => true,
-		'vsprintf'   => true,
-		'wp_sprintf' => true,
+		'antispambot' => true,
+		'array_fill'  => true,
+		'ent2ncr'     => true,
+		'implode'     => true,
+		'join'        => true,
+		'nl2br'       => true,
+		'sprintf'     => true,
+		'vsprintf'    => true,
+		'wp_sprintf'  => true,
 	);
 
 	/**
@@ -399,379 +378,6 @@ abstract class Sniff implements PHPCS_Sniff {
 		'vprintf'                 => true,
 		'wp_die'                  => true,
 		'wp_dropdown_pages'       => true,
-	);
-
-	/**
-	 * Functions that escape values for use in SQL queries.
-	 *
-	 * @since 0.9.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $SQLEscapingFunctions = array(
-		'absint'      => true,
-		'esc_sql'     => true,
-		'floatval'    => true,
-		'intval'      => true,
-		'like_escape' => true,
-	);
-
-	/**
-	 * Functions whose output is automatically escaped for use in SQL queries.
-	 *
-	 * @since 0.9.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $SQLAutoEscapedFunctions = array(
-		'count' => true,
-	);
-
-	/**
-	 * A list of functions that get data from the cache.
-	 *
-	 * @since 0.6.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $cacheGetFunctions = array(
-		'wp_cache_get' => true,
-	);
-
-	/**
-	 * A list of functions that set data in the cache.
-	 *
-	 * @since 0.6.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $cacheSetFunctions = array(
-		'wp_cache_set' => true,
-		'wp_cache_add' => true,
-	);
-
-	/**
-	 * A list of functions that delete data from the cache.
-	 *
-	 * @since 0.6.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $cacheDeleteFunctions = array(
-		'wp_cache_delete'         => true,
-		'clean_attachment_cache'  => true,
-		'clean_blog_cache'        => true,
-		'clean_bookmark_cache'    => true,
-		'clean_category_cache'    => true,
-		'clean_comment_cache'     => true,
-		'clean_network_cache'     => true,
-		'clean_object_term_cache' => true,
-		'clean_page_cache'        => true,
-		'clean_post_cache'        => true,
-		'clean_term_cache'        => true,
-		'clean_user_cache'        => true,
-	);
-
-	/**
-	 * A list of functions that invoke WP hooks (filters/actions).
-	 *
-	 * @since 0.10.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array
-	 */
-	protected $hookInvokeFunctions = array(
-		'do_action'                => true,
-		'do_action_ref_array'      => true,
-		'do_action_deprecated'     => true,
-		'apply_filters'            => true,
-		'apply_filters_ref_array'  => true,
-		'apply_filters_deprecated' => true,
-	);
-
-	/**
-	 * A list of functions that are used to interact with the WP plugins API.
-	 *
-	 * @since 0.10.0
-	 * @since 0.11.0 Changed from public static to protected non-static.
-	 *
-	 * @var array <string function name> => <int position of the hook name argument in function signature>
-	 */
-	protected $hookFunctions = array(
-		'has_filter'         => 1,
-		'add_filter'         => 1,
-		'remove_filter'      => 1,
-		'remove_all_filters' => 1,
-		'doing_filter'       => 1, // Hook name optional.
-		'has_action'         => 1,
-		'add_action'         => 1,
-		'doing_action'       => 1, // Hook name optional.
-		'did_action'         => 1,
-		'remove_action'      => 1,
-		'remove_all_actions' => 1,
-		'current_filter'     => 0, // No hook name argument.
-	);
-
-	/**
-	 * List of global WP variables.
-	 *
-	 * @since 0.3.0
-	 * @since 0.11.0 Changed visibility from public to protected.
-	 * @since 0.12.0 Renamed from `$globals` to `$wp_globals` to be more descriptive.
-	 * @since 0.12.0 Moved here from the WordPress.Variables.GlobalVariables sniff.
-	 *
-	 * @var array
-	 */
-	protected $wp_globals = array(
-		'_links_add_base'                  => true,
-		'_links_add_target'                => true,
-		'_menu_item_sort_prop'             => true,
-		'_nav_menu_placeholder'            => true,
-		'_new_bundled_files'               => true,
-		'_old_files'                       => true,
-		'_parent_pages'                    => true,
-		'_registered_pages'                => true,
-		'_updated_user_settings'           => true,
-		'_wp_additional_image_sizes'       => true,
-		'_wp_admin_css_colors'             => true,
-		'_wp_default_headers'              => true,
-		'_wp_deprecated_widgets_callbacks' => true,
-		'_wp_last_object_menu'             => true,
-		'_wp_last_utility_menu'            => true,
-		'_wp_menu_nopriv'                  => true,
-		'_wp_nav_menu_max_depth'           => true,
-		'_wp_post_type_features'           => true,
-		'_wp_real_parent_file'             => true,
-		'_wp_registered_nav_menus'         => true,
-		'_wp_sidebars_widgets'             => true,
-		'_wp_submenu_nopriv'               => true,
-		'_wp_suspend_cache_invalidation'   => true,
-		'_wp_theme_features'               => true,
-		'_wp_using_ext_object_cache'       => true,
-		'action'                           => true,
-		'active_signup'                    => true,
-		'admin_body_class'                 => true,
-		'admin_page_hooks'                 => true,
-		'all_links'                        => true,
-		'allowedentitynames'               => true,
-		'allowedposttags'                  => true,
-		'allowedtags'                      => true,
-		'auth_secure_cookie'               => true,
-		'authordata'                       => true,
-		'avail_post_mime_types'            => true,
-		'avail_post_stati'                 => true,
-		'blog_id'                          => true,
-		'blog_title'                       => true,
-		'blogname'                         => true,
-		'cat'                              => true,
-		'cat_id'                           => true,
-		'charset_collate'                  => true,
-		'comment'                          => true,
-		'comment_alt'                      => true,
-		'comment_depth'                    => true,
-		'comment_status'                   => true,
-		'comment_thread_alt'               => true,
-		'comment_type'                     => true,
-		'comments'                         => true,
-		'compress_css'                     => true,
-		'compress_scripts'                 => true,
-		'concatenate_scripts'              => true,
-		'content_width'                    => true,
-		'current_blog'                     => true,
-		'current_screen'                   => true,
-		'current_site'                     => true,
-		'current_user'                     => true,
-		'currentcat'                       => true,
-		'currentday'                       => true,
-		'currentmonth'                     => true,
-		'custom_background'                => true,
-		'custom_image_header'              => true,
-		'default_menu_order'               => true,
-		'descriptions'                     => true,
-		'domain'                           => true,
-		'editor_styles'                    => true,
-		'error'                            => true,
-		'errors'                           => true,
-		'EZSQL_ERROR'                      => true,
-		'feeds'                            => true,
-		'GETID3_ERRORARRAY'                => true,
-		'hook_suffix'                      => true,
-		'HTTP_RAW_POST_DATA'               => true,
-		'id'                               => true,
-		'in_comment_loop'                  => true,
-		'interim_login'                    => true,
-		'is_apache'                        => true,
-		'is_chrome'                        => true,
-		'is_gecko'                         => true,
-		'is_IE'                            => true,
-		'is_IIS'                           => true,
-		'is_iis7'                          => true,
-		'is_macIE'                         => true,
-		'is_NS4'                           => true,
-		'is_opera'                         => true,
-		'is_safari'                        => true,
-		'is_winIE'                         => true,
-		'l10n'                             => true,
-		'link'                             => true,
-		'link_id'                          => true,
-		'locale'                           => true,
-		'locked_post_status'               => true,
-		'lost'                             => true,
-		'm'                                => true,
-		'map'                              => true,
-		'menu'                             => true,
-		'menu_order'                       => true,
-		'merged_filters'                   => true,
-		'mode'                             => true,
-		'monthnum'                         => true,
-		'more'                             => true,
-		'mu_plugin'                        => true,
-		'multipage'                        => true,
-		'names'                            => true,
-		'nav_menu_selected_id'             => true,
-		'network_plugin'                   => true,
-		'new_whitelist_options'            => true,
-		'numpages'                         => true,
-		'one_theme_location_no_menus'      => true,
-		'opml'                             => true,
-		'order'                            => true,
-		'orderby'                          => true,
-		'overridden_cpage'                 => true,
-		'page'                             => true,
-		'paged'                            => true,
-		'pagenow'                          => true,
-		'pages'                            => true,
-		'parent_file'                      => true,
-		'pass_allowed_html'                => true,
-		'pass_allowed_protocols'           => true,
-		'path'                             => true,
-		'per_page'                         => true,
-		'PHP_SELF'                         => true,
-		'phpmailer'                        => true,
-		'plugin_page'                      => true,
-		'plugin'                           => true,
-		'plugins'                          => true,
-		'post'                             => true,
-		'post_default_category'            => true,
-		'post_default_title'               => true,
-		'post_ID'                          => true,
-		'post_id'                          => true,
-		'post_mime_types'                  => true,
-		'post_type'                        => true,
-		'post_type_object'                 => true,
-		'posts'                            => true,
-		'preview'                          => true,
-		'previouscat'                      => true,
-		'previousday'                      => true,
-		'previousweekday'                  => true,
-		'redir_tab'                        => true,
-		'required_mysql_version'           => true,
-		'required_php_version'             => true,
-		'rnd_value'                        => true,
-		'role'                             => true,
-		's'                                => true,
-		'search'                           => true,
-		'self'                             => true,
-		'shortcode_tags'                   => true,
-		'show_admin_bar'                   => true,
-		'sidebars_widgets'                 => true,
-		'status'                           => true,
-		'submenu'                          => true,
-		'submenu_file'                     => true,
-		'super_admins'                     => true,
-		'tab'                              => true,
-		'table_prefix'                     => true,
-		'tabs'                             => true,
-		'tag'                              => true,
-		'tag_ID'                           => true,
-		'targets'                          => true,
-		'tax'                              => true,
-		'taxnow'                           => true,
-		'taxonomy'                         => true,
-		'term'                             => true,
-		'text_direction'                   => true,
-		'theme_field_defaults'             => true,
-		'themes_allowedtags'               => true,
-		'timeend'                          => true,
-		'timestart'                        => true,
-		'tinymce_version'                  => true,
-		'title'                            => true,
-		'totals'                           => true,
-		'type'                             => true,
-		'typenow'                          => true,
-		'updated_timestamp'                => true,
-		'upgrading'                        => true,
-		'urls'                             => true,
-		'user_email'                       => true,
-		'user_ID'                          => true,
-		'user_identity'                    => true,
-		'user_level'                       => true,
-		'user_login'                       => true,
-		'user_url'                         => true,
-		'userdata'                         => true,
-		'usersearch'                       => true,
-		'whitelist_options'                => true,
-		'withcomments'                     => true,
-		'wp'                               => true,
-		'wp_actions'                       => true,
-		'wp_admin_bar'                     => true,
-		'wp_cockneyreplace'                => true,
-		'wp_current_db_version'            => true,
-		'wp_current_filter'                => true,
-		'wp_customize'                     => true,
-		'wp_dashboard_control_callbacks'   => true,
-		'wp_db_version'                    => true,
-		'wp_did_header'                    => true,
-		'wp_embed'                         => true,
-		'wp_file_descriptions'             => true,
-		'wp_filesystem'                    => true,
-		'wp_filter'                        => true,
-		'wp_hasher'                        => true,
-		'wp_header_to_desc'                => true,
-		'wp_importers'                     => true,
-		'wp_json'                          => true,
-		'wp_list_table'                    => true,
-		'wp_local_package'                 => true,
-		'wp_locale'                        => true,
-		'wp_meta_boxes'                    => true,
-		'wp_object_cache'                  => true,
-		'wp_plugin_paths'                  => true,
-		'wp_post_statuses'                 => true,
-		'wp_post_types'                    => true,
-		'wp_queries'                       => true,
-		'wp_query'                         => true,
-		'wp_registered_sidebars'           => true,
-		'wp_registered_widget_controls'    => true,
-		'wp_registered_widget_updates'     => true,
-		'wp_registered_widgets'            => true,
-		'wp_rewrite'                       => true,
-		'wp_rich_edit'                     => true,
-		'wp_rich_edit_exists'              => true,
-		'wp_roles'                         => true,
-		'wp_scripts'                       => true,
-		'wp_settings_errors'               => true,
-		'wp_settings_fields'               => true,
-		'wp_settings_sections'             => true,
-		'wp_smiliessearch'                 => true,
-		'wp_styles'                        => true,
-		'wp_taxonomies'                    => true,
-		'wp_the_query'                     => true,
-		'wp_theme_directories'             => true,
-		'wp_themes'                        => true,
-		'wp_user_roles'                    => true,
-		'wp_version'                       => true,
-		'wp_widget_factory'                => true,
-		'wp_xmlrpc_server'                 => true,
-		'wpcommentsjavascript'             => true,
-		'wpcommentspopupfile'              => true,
-		'wpdb'                             => true,
-		'wpsmiliestrans'                   => true,
-		'year'                             => true,
 	);
 
 	/**
@@ -854,91 +460,6 @@ abstract class Sniff implements PHPCS_Sniff {
 	}
 
 	/**
-	 * Add a PHPCS message to the output stack as either a warning or an error.
-	 *
-	 * @since 0.11.0
-	 *
-	 * @param string $message  The message.
-	 * @param int    $stackPtr The position of the token the message relates to.
-	 * @param bool   $is_error Optional. Whether to report the message as an 'error' or 'warning'.
-	 *                         Defaults to true (error).
-	 * @param string $code     Optional error code for the message. Defaults to 'Found'.
-	 * @param array  $data     Optional input for the data replacements.
-	 * @param int    $severity Optional. Severity level. Defaults to 0 which will translate to
-	 *                         the PHPCS default severity level.
-	 * @return bool
-	 */
-	protected function addMessage( $message, $stackPtr, $is_error = true, $code = 'Found', $data = array(), $severity = 0 ) {
-		return $this->throwMessage( $message, $stackPtr, $is_error, $code, $data, $severity, false );
-	}
-
-	/**
-	 * Add a fixable PHPCS message to the output stack as either a warning or an error.
-	 *
-	 * @since 0.11.0
-	 *
-	 * @param string $message  The message.
-	 * @param int    $stackPtr The position of the token the message relates to.
-	 * @param bool   $is_error Optional. Whether to report the message as an 'error' or 'warning'.
-	 *                         Defaults to true (error).
-	 * @param string $code     Optional error code for the message. Defaults to 'Found'.
-	 * @param array  $data     Optional input for the data replacements.
-	 * @param int    $severity Optional. Severity level. Defaults to 0 which will translate to
-	 *                         the PHPCS default severity level.
-	 * @return bool
-	 */
-	protected function addFixableMessage( $message, $stackPtr, $is_error = true, $code = 'Found', $data = array(), $severity = 0 ) {
-		return $this->throwMessage( $message, $stackPtr, $is_error, $code, $data, $severity, true );
-	}
-
-	/**
-	 * Add a PHPCS message to the output stack as either a warning or an error.
-	 *
-	 * @since 0.11.0
-	 *
-	 * @param string $message  The message.
-	 * @param int    $stackPtr The position of the token the message relates to.
-	 * @param bool   $is_error Optional. Whether to report the message as an 'error' or 'warning'.
-	 *                         Defaults to true (error).
-	 * @param string $code     Optional error code for the message. Defaults to 'Found'.
-	 * @param array  $data     Optional input for the data replacements.
-	 * @param int    $severity Optional. Severity level. Defaults to 0 which will translate to
-	 *                         the PHPCS default severity level.
-	 * @param bool   $fixable  Optional. Whether this is a fixable error. Defaults to false.
-	 * @return bool
-	 */
-	private function throwMessage( $message, $stackPtr, $is_error = true, $code = 'Found', $data = array(), $severity = 0, $fixable = false ) {
-
-		$method = 'add';
-		if ( true === $fixable ) {
-			$method .= 'Fixable';
-		}
-
-		if ( true === $is_error ) {
-			$method .= 'Error';
-		} else {
-			$method .= 'Warning';
-		}
-
-		return \call_user_func( array( $this->phpcsFile, $method ), $message, $stackPtr, $code, $data, $severity );
-	}
-
-	/**
-	 * Convert an arbitrary string to an alphanumeric string with underscores.
-	 *
-	 * Pre-empt issues with arbitrary strings being used as error codes in XML and PHP.
-	 *
-	 * @since 0.11.0
-	 *
-	 * @param string $base_string Arbitrary string.
-	 *
-	 * @return string
-	 */
-	protected function string_to_errorcode( $base_string ) {
-		return preg_replace( '`[^a-z0-9_]`i', '_', $base_string );
-	}
-
-	/**
 	 * Transform the name of a PHP construct (function, variable etc) to one in snake_case.
 	 *
 	 * @since 2.0.0 Moved from the `WordPress.NamingConventions.ValidFunctionName` sniff
@@ -958,53 +479,6 @@ abstract class Sniff implements PHPCS_Sniff {
 	}
 
 	/**
-	 * Merge a pre-set array with a ruleset provided array.
-	 *
-	 * - By default flips custom lists to allow for using `isset()` instead
-	 *   of `in_array()`.
-	 * - When `$flip` is true:
-	 *   * Presumes the base array is in a `'value' => true` format.
-	 *   * Any custom items will be given the value `false` to be able to
-	 *     distinguish them from pre-set (base array) values.
-	 *   * Will filter previously added custom items out from the base array
-	 *     before merging/returning to allow for resetting to the base array.
-	 *
-	 * {@internal Function is static as it doesn't use any of the properties or others
-	 * methods anyway and this way the `WordPress.NamingConventions.ValidVariableName` sniff
-	 * which extends an upstream sniff can also use it.}}
-	 *
-	 * @since 0.11.0
-	 * @since 2.0.0  No longer supports custom array properties which were incorrectly
-	 *               passed as a string.
-	 *
-	 * @param array $custom Custom list as provided via a ruleset.
-	 * @param array $base   Optional. Base list. Defaults to an empty array.
-	 *                      Expects `value => true` format when `$flip` is true.
-	 * @param bool  $flip   Optional. Whether or not to flip the custom list.
-	 *                      Defaults to true.
-	 * @return array
-	 */
-	public static function merge_custom_array( $custom, $base = array(), $flip = true ) {
-		if ( true === $flip ) {
-			$base = array_filter( $base );
-		}
-
-		if ( empty( $custom ) || ! \is_array( $custom ) ) {
-			return $base;
-		}
-
-		if ( true === $flip ) {
-			$custom = array_fill_keys( $custom, false );
-		}
-
-		if ( empty( $base ) ) {
-			return $custom;
-		}
-
-		return array_merge( $base, $custom );
-	}
-
-	/**
 	 * Get the last pointer in a line.
 	 *
 	 * @since 0.4.0
@@ -1021,202 +495,13 @@ abstract class Sniff implements PHPCS_Sniff {
 		$nextPtr     = ( $stackPtr + 1 );
 
 		while ( isset( $tokens[ $nextPtr ] ) && $tokens[ $nextPtr ]['line'] === $currentLine ) {
-			$nextPtr++;
+			++$nextPtr;
 			// Do nothing, we just want the last token of the line.
 		}
 
 		// We've made it to the next line, back up one to the last in the previous line.
 		// We do this for micro-optimization of the above loop.
 		return ( $nextPtr - 1 );
-	}
-
-	/**
-	 * Check if this variable is being assigned a value.
-	 *
-	 * E.g., $var = 'foo';
-	 *
-	 * Also handles array assignments to arbitrary depth:
-	 *
-	 * $array['key'][ $foo ][ something() ] = $bar;
-	 *
-	 * @since 0.5.0
-	 *
-	 * @param int $stackPtr The index of the token in the stack. This must point to
-	 *                      either a T_VARIABLE or T_CLOSE_SQUARE_BRACKET token.
-	 *
-	 * @return bool Whether the token is a variable being assigned a value.
-	 */
-	protected function is_assignment( $stackPtr ) {
-
-		static $valid = array(
-			\T_VARIABLE             => true,
-			\T_CLOSE_SQUARE_BRACKET => true,
-		);
-
-		// Must be a variable, constant or closing square bracket (see below).
-		if ( ! isset( $valid[ $this->tokens[ $stackPtr ]['code'] ] ) ) {
-			return false;
-		}
-
-		$next_non_empty = $this->phpcsFile->findNext(
-			Tokens::$emptyTokens,
-			( $stackPtr + 1 ),
-			null,
-			true,
-			null,
-			true
-		);
-
-		// No token found.
-		if ( false === $next_non_empty ) {
-			return false;
-		}
-
-		// If the next token is an assignment, that's all we need to know.
-		if ( isset( Tokens::$assignmentTokens[ $this->tokens[ $next_non_empty ]['code'] ] ) ) {
-			return true;
-		}
-
-		// Check if this is an array assignment, e.g., `$var['key'] = 'val';` .
-		if ( \T_OPEN_SQUARE_BRACKET === $this->tokens[ $next_non_empty ]['code']
-			&& isset( $this->tokens[ $next_non_empty ]['bracket_closer'] )
-		) {
-			return $this->is_assignment( $this->tokens[ $next_non_empty ]['bracket_closer'] );
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if this token has an associated nonce check.
-	 *
-	 * @since 0.5.0
-	 *
-	 * @param int $stackPtr The position of the current token in the stack of tokens.
-	 *
-	 * @return bool
-	 */
-	protected function has_nonce_check( $stackPtr ) {
-
-		/**
-		 * A cache of the scope that we last checked for nonce verification in.
-		 *
-		 * @var array {
-		 *      @var string   $file        The name of the file.
-		 *      @var int      $start       The index of the token where the scope started.
-		 *      @var int      $end         The index of the token where the scope ended.
-		 *      @var bool|int $nonce_check The index of the token where an nonce check
-		 *                                 was found, or false if none was found.
-		 * }
-		 */
-		static $last;
-
-		$start = 0;
-		$end   = $stackPtr;
-
-		$tokens = $this->phpcsFile->getTokens();
-
-		// If we're in a function, only look inside of it.
-		// Once PHPCS 3.5.0 comes out this should be changed to the new Conditions::GetLastCondition() method.
-		if ( isset( $tokens[ $stackPtr ]['conditions'] ) === true ) {
-			$conditions = $tokens[ $stackPtr ]['conditions'];
-			$conditions = array_reverse( $conditions, true );
-			foreach ( $conditions as $tokenPtr => $condition ) {
-				if ( \T_FUNCTION === $condition || \T_CLOSURE === $condition ) {
-					$start = $tokens[ $tokenPtr ]['scope_opener'];
-					break;
-				}
-			}
-		}
-
-		$allow_nonce_after = false;
-		if ( $this->is_in_isset_or_empty( $stackPtr )
-			|| $this->is_in_type_test( $stackPtr )
-			|| $this->is_comparison( $stackPtr )
-			|| $this->is_in_array_comparison( $stackPtr )
-			|| $this->is_in_function_call( $stackPtr, $this->unslashingFunctions ) !== false
-			|| $this->is_only_sanitized( $stackPtr )
-		) {
-			$allow_nonce_after = true;
-		}
-
-		// We allow for certain actions, such as an isset() check to come before the nonce check.
-		// If this superglobal is inside such a check, look for the nonce after it as well,
-		// all the way to the end of the scope.
-		if ( true === $allow_nonce_after ) {
-			$end = ( 0 === $start ) ? $this->phpcsFile->numTokens : $tokens[ $start ]['scope_closer'];
-		}
-
-		// Check if we've looked here before.
-		$filename = $this->phpcsFile->getFilename();
-
-		if ( is_array( $last )
-			&& $filename === $last['file']
-			&& $start === $last['start']
-		) {
-
-			if ( false !== $last['nonce_check'] ) {
-				// If we have already found an nonce check in this scope, we just
-				// need to check whether it comes before this token. It is OK if the
-				// check is after the token though, if this was only a isset() check.
-				return ( true === $allow_nonce_after || $last['nonce_check'] < $stackPtr );
-			} elseif ( $end <= $last['end'] ) {
-				// If not, we can still go ahead and return false if we've already
-				// checked to the end of the search area.
-				return false;
-			}
-
-			// We haven't checked this far yet, but we can still save work by
-			// skipping over the part we've already checked.
-			$start = $last['end'];
-		} else {
-			$last = array(
-				'file'  => $filename,
-				'start' => $start,
-				'end'   => $end,
-			);
-		}
-
-		// Loop through the tokens looking for nonce verification functions.
-		for ( $i = $start; $i < $end; $i++ ) {
-			// Skip over nested closed scope constructs.
-			if ( \T_FUNCTION === $tokens[ $i ]['code']
-				|| \T_CLOSURE === $tokens[ $i ]['code']
-				|| isset( Tokens::$ooScopeTokens[ $tokens[ $i ]['code'] ] )
-			) {
-				if ( isset( $tokens[ $i ]['scope_closer'] ) ) {
-					$i = $tokens[ $i ]['scope_closer'];
-				}
-				continue;
-			}
-
-			// If this isn't a function name, skip it.
-			if ( \T_STRING !== $tokens[ $i ]['code'] ) {
-				continue;
-			}
-
-			// If this is one of the nonce verification functions, we can bail out.
-			if ( isset( $this->nonceVerificationFunctions[ $tokens[ $i ]['content'] ] ) ) {
-				/*
-				 * Now, make sure it is a call to a global function.
-				 */
-				if ( $this->is_class_object_call( $i ) === true ) {
-					continue;
-				}
-
-				if ( $this->is_token_namespaced( $i ) === true ) {
-					continue;
-				}
-
-				$last['nonce_check'] = $i;
-				return true;
-			}
-		}
-
-		// We're still here, so no luck.
-		$last['nonce_check'] = false;
-
-		return false;
 	}
 
 	/**
@@ -1349,7 +634,7 @@ abstract class Sniff implements PHPCS_Sniff {
 	 * @param array $valid_functions List of valid function names.
 	 *                               Note: The keys to this array should be the function names
 	 *                               in lowercase. Values are irrelevant.
-	 * @param bool  $global          Optional. Whether to make sure that the function call is
+	 * @param bool  $global_function Optional. Whether to make sure that the function call is
 	 *                               to a global function. If `false`, calls to methods, be it static
 	 *                               `Class::method()` or via an object `$obj->method()`, and
 	 *                               namespaced function calls, like `MyNS\function_name()` will
@@ -1364,7 +649,7 @@ abstract class Sniff implements PHPCS_Sniff {
 	 *
 	 * @return int|bool Stack pointer to the function call T_STRING token or false otherwise.
 	 */
-	protected function is_in_function_call( $stackPtr, $valid_functions, $global = true, $allow_nested = false ) {
+	protected function is_in_function_call( $stackPtr, $valid_functions, $global_function = true, $allow_nested = false ) {
 		if ( ! isset( $this->tokens[ $stackPtr ]['nested_parenthesis'] ) ) {
 			return false;
 		}
@@ -1390,7 +675,7 @@ abstract class Sniff implements PHPCS_Sniff {
 				continue;
 			}
 
-			if ( false === $global ) {
+			if ( false === $global_function ) {
 				return $prev_non_empty;
 			}
 
@@ -1623,82 +908,6 @@ abstract class Sniff implements PHPCS_Sniff {
 	}
 
 	/**
-	 * Get the index keys of an array variable.
-	 *
-	 * E.g., "bar" and "baz" in $foo['bar']['baz'].
-	 *
-	 * @since 2.1.0
-	 *
-	 * @param int  $stackPtr The index of the variable token in the stack.
-	 * @param bool $all      Whether to get all keys or only the first.
-	 *                       Defaults to `true`(= all).
-	 *
-	 * @return array An array of index keys whose value is being accessed.
-	 *               or an empty array if this is not array access.
-	 */
-	protected function get_array_access_keys( $stackPtr, $all = true ) {
-
-		$keys = array();
-
-		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
-			return $keys;
-		}
-
-		$current = $stackPtr;
-
-		do {
-			// Find the next non-empty token.
-			$open_bracket = $this->phpcsFile->findNext(
-				Tokens::$emptyTokens,
-				( $current + 1 ),
-				null,
-				true
-			);
-
-			// If it isn't a bracket, this isn't an array-access.
-			if ( false === $open_bracket
-				|| \T_OPEN_SQUARE_BRACKET !== $this->tokens[ $open_bracket ]['code']
-				|| ! isset( $this->tokens[ $open_bracket ]['bracket_closer'] )
-			) {
-				break;
-			}
-
-			$key = $this->phpcsFile->getTokensAsString(
-				( $open_bracket + 1 ),
-				( $this->tokens[ $open_bracket ]['bracket_closer'] - $open_bracket - 1 )
-			);
-
-			$keys[]  = trim( $key );
-			$current = $this->tokens[ $open_bracket ]['bracket_closer'];
-		} while ( isset( $this->tokens[ $current ] ) && true === $all );
-
-		return $keys;
-	}
-
-	/**
-	 * Get the index key of an array variable.
-	 *
-	 * E.g., "bar" in $foo['bar'].
-	 *
-	 * @since 0.5.0
-	 * @since 2.1.0 Now uses get_array_access_keys() under the hood.
-	 *
-	 * @param int $stackPtr The index of the token in the stack.
-	 *
-	 * @return string|false The array index key whose value is being accessed.
-	 */
-	protected function get_array_access_key( $stackPtr ) {
-
-		$keys = $this->get_array_access_keys( $stackPtr, false );
-
-		if ( isset( $keys[0] ) ) {
-			return $keys[0];
-		}
-
-		return false;
-	}
-
-	/**
 	 * Check if the existence of a variable is validated with isset(), empty(), array_key_exists()
 	 * or key_exists().
 	 *
@@ -1835,7 +1044,7 @@ abstract class Sniff implements PHPCS_Sniff {
 						// If we're checking for specific array keys (ex: 'hello' in
 						// $_POST['hello']), that must match too. Quote-style, however, doesn't matter.
 						if ( ! empty( $bare_array_keys ) ) {
-							$found_keys = $this->get_array_access_keys( $i );
+							$found_keys = VariableHelper::get_array_access_keys( $this->phpcsFile, $i );
 							$found_keys = array_map( array( 'PHPCSUtils\Utils\TextStrings', 'stripQuotes' ), $found_keys );
 							$diff       = array_diff_assoc( $bare_array_keys, $found_keys );
 							if ( ! empty( $diff ) ) {
@@ -1896,7 +1105,7 @@ abstract class Sniff implements PHPCS_Sniff {
 						 * parameter, so we need to check both options.
 						 */
 
-						$found_keys = $this->get_array_access_keys( $param2_first_token );
+						$found_keys = VariableHelper::get_array_access_keys( $this->phpcsFile, $param2_first_token );
 						$found_keys = array_map( array( 'PHPCSUtils\Utils\TextStrings', 'stripQuotes' ), $found_keys );
 
 						// First try matching the complete set against the second parameter.
@@ -1940,7 +1149,7 @@ abstract class Sniff implements PHPCS_Sniff {
 					}
 
 					if ( ! empty( $bare_array_keys ) ) {
-						$found_keys = $this->get_array_access_keys( $prev );
+						$found_keys = VariableHelper::get_array_access_keys( $this->phpcsFile, $prev );
 						$found_keys = array_map( array( 'PHPCSUtils\Utils\TextStrings', 'stripQuotes' ), $found_keys );
 						$diff       = array_diff_assoc( $bare_array_keys, $found_keys );
 						if ( ! empty( $diff ) ) {
@@ -1951,85 +1160,6 @@ abstract class Sniff implements PHPCS_Sniff {
 					// Right variable, correct key.
 					return true;
 			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check whether a variable is being compared to another value.
-	 *
-	 * E.g., $var === 'foo', 1 <= $var, etc.
-	 *
-	 * Also recognizes `switch ( $var )`.
-	 *
-	 * @since 0.5.0
-	 * @since 2.1.0 Added the $include_coalesce parameter.
-	 *
-	 * @param int  $stackPtr         The index of this token in the stack.
-	 * @param bool $include_coalesce Optional. Whether or not to regard the null
-	 *                               coalesce operator - ?? - as a comparison operator.
-	 *                               Defaults to true.
-	 *                               Null coalesce is a special comparison operator in this
-	 *                               sense as it doesn't compare a variable to whatever is
-	 *                               on the other side of the comparison operator.
-	 *
-	 * @return bool Whether this is a comparison.
-	 */
-	protected function is_comparison( $stackPtr, $include_coalesce = true ) {
-
-		$comparisonTokens = Tokens::$comparisonTokens;
-		if ( false === $include_coalesce ) {
-			unset( $comparisonTokens[ \T_COALESCE ] );
-		}
-
-		// We first check if this is a switch statement (switch ( $var )).
-		if ( isset( $this->tokens[ $stackPtr ]['nested_parenthesis'] ) ) {
-			$nested_parenthesis = $this->tokens[ $stackPtr ]['nested_parenthesis'];
-			$close_parenthesis  = end( $nested_parenthesis );
-
-			if (
-				isset( $this->tokens[ $close_parenthesis ]['parenthesis_owner'] )
-				&& \T_SWITCH === $this->tokens[ $this->tokens[ $close_parenthesis ]['parenthesis_owner'] ]['code']
-			) {
-				return true;
-			}
-		}
-
-		// Find the previous non-empty token. We check before the var first because
-		// yoda conditions are usually expected.
-		$previous_token = $this->phpcsFile->findPrevious(
-			Tokens::$emptyTokens,
-			( $stackPtr - 1 ),
-			null,
-			true
-		);
-
-		if ( isset( $comparisonTokens[ $this->tokens[ $previous_token ]['code'] ] ) ) {
-			return true;
-		}
-
-		// Maybe the comparison operator is after this.
-		$next_token = $this->phpcsFile->findNext(
-			Tokens::$emptyTokens,
-			( $stackPtr + 1 ),
-			null,
-			true
-		);
-
-		// This might be an opening square bracket in the case of arrays ($var['a']).
-		while ( false !== $next_token && \T_OPEN_SQUARE_BRACKET === $this->tokens[ $next_token ]['code'] ) {
-
-			$next_token = $this->phpcsFile->findNext(
-				Tokens::$emptyTokens,
-				( $this->tokens[ $next_token ]['bracket_closer'] + 1 ),
-				null,
-				true
-			);
-		}
-
-		if ( false !== $next_token && isset( $comparisonTokens[ $this->tokens[ $next_token ]['code'] ] ) ) {
-			return true;
 		}
 
 		return false;
@@ -2061,135 +1191,6 @@ abstract class Sniff implements PHPCS_Sniff {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Get the interpolated variable names from a string.
-	 *
-	 * Check if '$' is followed by a valid variable name, and that it is not preceded by an escape sequence.
-	 *
-	 * @since 0.9.0
-	 *
-	 * @param string $string The contents of a T_DOUBLE_QUOTED_STRING or T_HEREDOC token.
-	 *
-	 * @return array Variable names (without '$' sigil).
-	 */
-	protected function get_interpolated_variables( $string ) {
-		$variables = array();
-		if ( preg_match_all( '/(?P<backslashes>\\\\*)\$(?P<symbol>\w+)/', $string, $match_sets, \PREG_SET_ORDER ) ) {
-			foreach ( $match_sets as $matches ) {
-				if ( ! isset( $matches['backslashes'] ) || ( \strlen( $matches['backslashes'] ) % 2 ) === 0 ) {
-					$variables[] = $matches['symbol'];
-				}
-			}
-		}
-		return $variables;
-	}
-
-	/**
-	 * Strip variables from an arbitrary double quoted/heredoc string.
-	 *
-	 * Intended for use with the contents of a T_DOUBLE_QUOTED_STRING or T_HEREDOC token.
-	 *
-	 * @since 0.14.0
-	 *
-	 * @param string $string The raw string.
-	 *
-	 * @return string String without variables in it.
-	 */
-	public function strip_interpolated_variables( $string ) {
-		if ( strpos( $string, '$' ) === false ) {
-			return $string;
-		}
-
-		return preg_replace( self::REGEX_COMPLEX_VARS, '', $string );
-	}
-
-	/**
-	 * Checks whether this is a call to a $wpdb method that we want to sniff.
-	 *
-	 * If available in the child class, the $methodPtr, $i and $end properties are
-	 * automatically set to correspond to the start and end of the method call.
-	 * The $i property is also set if this is not a method call but rather the
-	 * use of a $wpdb property.
-	 *
-	 * @since 0.8.0
-	 * @since 0.9.0  The return value is now always boolean. The $end and $i member
-	 *               vars are automatically updated.
-	 * @since 0.14.0 Moved this method from the `PreparedSQL` sniff to the base WP sniff.
-	 *
-	 * {@internal This method should probably be refactored.}}
-	 *
-	 * @param int   $stackPtr       The index of the $wpdb variable.
-	 * @param array $target_methods Array of methods. Key(s) should be method name.
-	 *
-	 * @return bool Whether this is a $wpdb method call.
-	 */
-	protected function is_wpdb_method_call( $stackPtr, $target_methods ) {
-
-		// Check for wpdb.
-		if ( ( \T_VARIABLE === $this->tokens[ $stackPtr ]['code'] && '$wpdb' !== $this->tokens[ $stackPtr ]['content'] )
-			|| ( \T_STRING === $this->tokens[ $stackPtr ]['code'] && 'wpdb' !== $this->tokens[ $stackPtr ]['content'] )
-		) {
-			return false;
-		}
-
-		// Check that this is a method call.
-		$is_object_call = $this->phpcsFile->findNext(
-			array( \T_OBJECT_OPERATOR, \T_DOUBLE_COLON ),
-			( $stackPtr + 1 ),
-			null,
-			false,
-			null,
-			true
-		);
-		if ( false === $is_object_call ) {
-			return false;
-		}
-
-		$methodPtr = $this->phpcsFile->findNext( \T_WHITESPACE, ( $is_object_call + 1 ), null, true, null, true );
-		if ( false === $methodPtr ) {
-			return false;
-		}
-
-		if ( \T_STRING === $this->tokens[ $methodPtr ]['code'] && property_exists( $this, 'methodPtr' ) ) {
-			$this->methodPtr = $methodPtr;
-		}
-
-		// Find the opening parenthesis.
-		$opening_paren = $this->phpcsFile->findNext( \T_WHITESPACE, ( $methodPtr + 1 ), null, true, null, true );
-
-		if ( false === $opening_paren ) {
-			return false;
-		}
-
-		if ( property_exists( $this, 'i' ) ) {
-			$this->i = $opening_paren;
-		}
-
-		if ( \T_OPEN_PARENTHESIS !== $this->tokens[ $opening_paren ]['code']
-			|| ! isset( $this->tokens[ $opening_paren ]['parenthesis_closer'] )
-		) {
-			return false;
-		}
-
-		// Check that this is one of the methods that we are interested in.
-		if ( ! isset( $target_methods[ $this->tokens[ $methodPtr ]['content'] ] ) ) {
-			return false;
-		}
-
-		// Find the end of the first parameter.
-		$end = $this->phpcsFile->findEndOfStatement( $opening_paren + 1 );
-
-		if ( \T_COMMA !== $this->tokens[ $end ]['code'] ) {
-			++$end;
-		}
-
-		if ( property_exists( $this, 'end' ) ) {
-			$this->end = $end;
-		}
-
-		return true;
 	}
 
 	/**
@@ -2296,41 +1297,6 @@ abstract class Sniff implements PHPCS_Sniff {
 	}
 
 	/**
-	 * Determine if a variable is in the `as $key => $value` part of a foreach condition.
-	 *
-	 * @since 1.0.0
-	 * @since 1.1.0 Moved from the PrefixAllGlobals sniff to the Sniff base class.
-	 *
-	 * @param int $stackPtr Pointer to the variable.
-	 *
-	 * @return bool True if it is. False otherwise.
-	 */
-	protected function is_foreach_as( $stackPtr ) {
-		if ( ! isset( $this->tokens[ $stackPtr ]['nested_parenthesis'] ) ) {
-			return false;
-		}
-
-		$nested_parenthesis = $this->tokens[ $stackPtr ]['nested_parenthesis'];
-		$close_parenthesis  = end( $nested_parenthesis );
-		$open_parenthesis   = key( $nested_parenthesis );
-		if ( ! isset( $this->tokens[ $close_parenthesis ]['parenthesis_owner'] ) ) {
-			return false;
-		}
-
-		if ( \T_FOREACH !== $this->tokens[ $this->tokens[ $close_parenthesis ]['parenthesis_owner'] ]['code'] ) {
-			return false;
-		}
-
-		$as_ptr = $this->phpcsFile->findNext( \T_AS, ( $open_parenthesis + 1 ), $close_parenthesis );
-		if ( false === $as_ptr ) {
-			// Should never happen.
-			return false;
-		}
-
-		return ( $stackPtr > $as_ptr );
-	}
-
-	/**
 	 * Get a list of the token pointers to the variables being assigned to in a list statement.
 	 *
 	 * @internal No need to take special measures for nested lists. Nested or not,
@@ -2395,40 +1361,5 @@ abstract class Sniff implements PHPCS_Sniff {
 		} while ( false === $last );
 
 		return $var_pointers;
-	}
-
-	/**
-	 * Check whether a function has been marked as deprecated via a @deprecated tag
-	 * in the function docblock.
-	 *
-	 * {@internal This method is static to allow the ValidFunctionName class to use it.}}
-	 *
-	 * @since 2.2.0
-	 *
-	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
-	 * @param int                         $stackPtr  The position of a T_FUNCTION
-	 *                                               token in the stack.
-	 *
-	 * @return bool
-	 */
-	public static function is_function_deprecated( File $phpcsFile, $stackPtr ) {
-		$tokens = $phpcsFile->getTokens();
-		$find   = Tokens::$methodPrefixes;
-		$find[] = \T_WHITESPACE;
-
-		$comment_end = $phpcsFile->findPrevious( $find, ( $stackPtr - 1 ), null, true );
-		if ( \T_DOC_COMMENT_CLOSE_TAG !== $tokens[ $comment_end ]['code'] ) {
-			// Function doesn't have a doc comment or is using the wrong type of comment.
-			return false;
-		}
-
-		$comment_start = $tokens[ $comment_end ]['comment_opener'];
-		foreach ( $tokens[ $comment_start ]['comment_tags'] as $tag ) {
-			if ( '@deprecated' === $tokens[ $tag ]['content'] ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 }

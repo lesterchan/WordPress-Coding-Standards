@@ -9,15 +9,18 @@
 
 namespace WordPressCS\WordPress\Sniffs\DB;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Tokens\Collections;
+use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\WPDBTrait;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Sniff for prepared SQL.
  *
  * Makes sure that variables aren't directly interpolated into SQL statements.
  *
- * @link    https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/#formatting-sql-statements
+ * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#formatting-sql-statements
  *
  * @package WPCS\WordPressCodingStandards
  *
@@ -27,13 +30,15 @@ use PHP_CodeSniffer\Util\Tokens;
  */
 class PreparedSQLSniff extends Sniff {
 
+	use WPDBTrait;
+
 	/**
 	 * The lists of $wpdb methods.
 	 *
 	 * @since 0.8.0
 	 * @since 0.11.0 Changed from static to non-static.
 	 *
-	 * @var array
+	 * @var array<string, bool>
 	 */
 	protected $methods = array(
 		'get_var'     => true,
@@ -45,30 +50,53 @@ class PreparedSQLSniff extends Sniff {
 	);
 
 	/**
-	 * Tokens that we don't flag when they are found in a $wpdb method call.
+	 * Functions that escape values for use in SQL queries.
 	 *
 	 * @since 0.9.0
+	 * @since 0.11.0 Changed from public static to protected non-static.
+	 * @since 3.0.0  - Moved from the Sniff class to this class.
+	 *               - The property visibility has changed from `protected` to `private`.
+	 *
+	 * @var array<string, bool>
+	 */
+	private $SQLEscapingFunctions = array(
+		'absint'      => true,
+		'esc_sql'     => true,
+		'floatval'    => true,
+		'intval'      => true,
+		'like_escape' => true,
+	);
+
+	/**
+	 * Functions whose output is automatically escaped for use in SQL queries.
+	 *
+	 * @since 0.9.0
+	 * @since 0.11.0 Changed from public static to protected non-static.
+	 * @since 3.0.0  - Moved from the Sniff class to this class.
+	 *               - The property visibility has changed from `protected` to `private`.
+	 *
+	 * @var array<string, bool>
+	 */
+	private $SQLAutoEscapedFunctions = array(
+		'count' => true,
+	);
+
+	/**
+	 * Tokens that we don't flag when they are found in a $wpdb method call.
+	 *
+	 * This token array is augmented from within the register() method.
+	 *
+	 * @since 0.9.0
+	 * @since 3.0.0 The property visibility has changed from `protected` to `private`.
 	 *
 	 * @var array
 	 */
-	protected $ignored_tokens = array(
-		\T_OBJECT_OPERATOR          => true,
-		\T_OPEN_PARENTHESIS         => true,
-		\T_CLOSE_PARENTHESIS        => true,
+	private $ignored_tokens = array(
 		\T_STRING_CONCAT            => true,
 		\T_CONSTANT_ENCAPSED_STRING => true,
-		\T_OPEN_SQUARE_BRACKET      => true,
-		\T_CLOSE_SQUARE_BRACKET     => true,
 		\T_COMMA                    => true,
 		\T_LNUMBER                  => true,
-		\T_START_HEREDOC            => true,
-		\T_END_HEREDOC              => true,
-		\T_START_NOWDOC             => true,
-		\T_NOWDOC                   => true,
-		\T_END_NOWDOC               => true,
-		\T_INT_CAST                 => true,
-		\T_DOUBLE_CAST              => true,
-		\T_BOOL_CAST                => true,
+		\T_DNUMBER                  => true,
 		\T_NS_SEPARATOR             => true,
 	);
 
@@ -102,8 +130,17 @@ class PreparedSQLSniff extends Sniff {
 	 * @return array
 	 */
 	public function register() {
-
+		// Enrich the array of tokens which can be safely ignored.
+		$this->ignored_tokens += Tokens::$bracketTokens;
+		$this->ignored_tokens += Tokens::$heredocTokens;
+		$this->ignored_tokens += Tokens::$castTokens;
+		$this->ignored_tokens += Tokens::$arithmeticTokens;
+		$this->ignored_tokens += Collections::incrementDecrementOperators();
+		$this->ignored_tokens += Collections::objectOperators();
 		$this->ignored_tokens += Tokens::$emptyTokens;
+
+		// The contents of heredoc tokens needs to be examined.
+		unset( $this->ignored_tokens[ \T_HEREDOC ] );
 
 		return array(
 			\T_VARIABLE,
@@ -123,7 +160,7 @@ class PreparedSQLSniff extends Sniff {
 	 */
 	public function process_token( $stackPtr ) {
 
-		if ( ! $this->is_wpdb_method_call( $stackPtr, $this->methods ) ) {
+		if ( ! $this->is_wpdb_method_call( $this->phpcsFile, $stackPtr, $this->methods ) ) {
 			return;
 		}
 
@@ -138,15 +175,15 @@ class PreparedSQLSniff extends Sniff {
 			) {
 
 				$bad_variables = array_filter(
-					$this->get_interpolated_variables( $this->tokens[ $this->i ]['content'] ),
+					TextStrings::getEmbeds( $this->tokens[ $this->i ]['content'] ),
 					function ( $symbol ) {
-						return ( 'wpdb' !== $symbol );
+						return preg_match( '`^\{?\$\{?wpdb\??->`', $symbol ) !== 1;
 					}
 				);
 
 				foreach ( $bad_variables as $bad_variable ) {
 					$this->phpcsFile->addError(
-						'Use placeholders and $wpdb->prepare(); found interpolated variable $%s at %s',
+						'Use placeholders and $wpdb->prepare(); found interpolated variable %s at %s',
 						$this->i,
 						'InterpolatedNotPrepared',
 						array(
@@ -160,7 +197,7 @@ class PreparedSQLSniff extends Sniff {
 
 			if ( \T_VARIABLE === $this->tokens[ $this->i ]['code'] ) {
 				if ( '$wpdb' === $this->tokens[ $this->i ]['content'] ) {
-					$this->is_wpdb_method_call( $this->i, $this->methods );
+					$this->is_wpdb_method_call( $this->phpcsFile, $this->i, $this->methods );
 					continue;
 				}
 
@@ -177,13 +214,13 @@ class PreparedSQLSniff extends Sniff {
 				) {
 
 					// Find the opening parenthesis.
-					$opening_paren = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $this->i + 1 ), null, true, null, true );
+					$opening_paren = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $this->i + 1 ), null, true );
 
 					if ( false !== $opening_paren
 						&& \T_OPEN_PARENTHESIS === $this->tokens[ $opening_paren ]['code']
 						&& isset( $this->tokens[ $opening_paren ]['parenthesis_closer'] )
 					) {
-						// Skip past the end of the function.
+						// Skip past to the end of the function call.
 						$this->i = $this->tokens[ $opening_paren ]['parenthesis_closer'];
 						continue;
 					}

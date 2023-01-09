@@ -9,6 +9,7 @@
 
 namespace WordPressCS\WordPress\Sniffs\PHP;
 
+use PHPCSUtils\Utils\PassedParameters;
 use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 
 /**
@@ -32,7 +33,7 @@ class PregQuoteDelimiterSniff extends AbstractFunctionParameterSniff {
 	/**
 	 * List of functions this sniff should examine.
 	 *
-	 * @link http://php.net/preg_quote
+	 * @link https://www.php.net/preg_quote
 	 *
 	 * @since 1.0.0
 	 *
@@ -55,15 +56,16 @@ class PregQuoteDelimiterSniff extends AbstractFunctionParameterSniff {
 	 * @return void
 	 */
 	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
-		if ( \count( $parameters ) > 1 ) {
+
+		$delimiter = PassedParameters::getParameterFromStack( $parameters, 2, 'delimiter' );
+		if ( false !== $delimiter ) {
 			return;
 		}
 
 		$this->phpcsFile->addWarning(
-			'Passing the $delimiter as the second parameter to preg_quote() is strongly recommended.',
+			'Passing the $delimiter parameter to preg_quote() is strongly recommended.',
 			$stackPtr,
 			'Missing'
 		);
 	}
-
 }

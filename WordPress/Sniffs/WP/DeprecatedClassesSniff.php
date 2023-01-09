@@ -9,6 +9,7 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
+use PHPCSUtils\Utils\MessageHelper;
 use WordPressCS\WordPress\AbstractClassRestrictionsSniff;
 use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
 
@@ -29,7 +30,7 @@ use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
  *                 being provided via the command-line or as as <config> value
  *                 in a custom ruleset.
  *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_supported_version
+ * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 
@@ -96,7 +97,7 @@ class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 	 */
 	public function process_matched_token( $stackPtr, $group_name, $matched_content ) {
 
-		$this->get_wp_version_from_cli( $this->phpcsFile );
+		$this->set_minimum_wp_version();
 
 		$class_name = ltrim( strtolower( $matched_content ), '\\' );
 
@@ -111,11 +112,12 @@ class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 			$data[]   = $this->deprecated_classes[ $class_name ]['alt'];
 		}
 
-		$this->addMessage(
+		MessageHelper::addMessage(
+			$this->phpcsFile,
 			$message,
 			$stackPtr,
-			( version_compare( $this->deprecated_classes[ $class_name ]['version'], $this->minimum_supported_version, '<' ) ),
-			$this->string_to_errorcode( $class_name . 'Found' ),
+			( $this->wp_version_compare( $this->deprecated_classes[ $class_name ]['version'], $this->minimum_wp_version, '<' ) ),
+			MessageHelper::stringToErrorcode( $class_name . 'Found' ),
 			$data
 		);
 	}

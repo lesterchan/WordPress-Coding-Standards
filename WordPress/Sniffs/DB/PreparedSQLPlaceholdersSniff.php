@@ -9,10 +9,11 @@
 
 namespace WordPressCS\WordPress\Sniffs\DB;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\PassedParameters;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\WPDBTrait;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Check for incorrect use of the $wpdb->prepare method.
@@ -33,10 +34,6 @@ use PHPCSUtils\Utils\TextStrings;
  * created using code along the lines of:
  * `sprintf( 'query .... IN (%s) ...', implode( ',', array_fill( 0, count( $something ), '%s' ) ) )`.
  *
- * A "PreparedSQLPlaceholders replacement count" whitelist comment is supported
- * specifically to silence the `ReplacementsWrongNumber` and `UnfinishedPrepare`
- * error codes. The other error codes are not affected by it.
- *
  * @link https://developer.wordpress.org/reference/classes/wpdb/prepare/
  * @link https://core.trac.wordpress.org/changeset/41496
  * @link https://core.trac.wordpress.org/changeset/41471
@@ -47,8 +44,10 @@ use PHPCSUtils\Utils\TextStrings;
  */
 class PreparedSQLPlaceholdersSniff extends Sniff {
 
+	use WPDBTrait;
+
 	/**
-	 * These regexes copied from http://php.net/manual/en/function.sprintf.php#93552
+	 * These regexes were originally copied from https://www.php.net/function.sprintf#93552
 	 * and adjusted for limitations in `$wpdb->prepare()`.
 	 *
 	 * Near duplicate of the one used in the WP.I18n sniff, but with fewer types allowed.
@@ -172,7 +171,7 @@ class PreparedSQLPlaceholdersSniff extends Sniff {
 	 */
 	public function process_token( $stackPtr ) {
 
-		if ( ! $this->is_wpdb_method_call( $stackPtr, $this->target_methods ) ) {
+		if ( ! $this->is_wpdb_method_call( $this->phpcsFile, $stackPtr, $this->target_methods ) ) {
 			return;
 		}
 
@@ -278,17 +277,22 @@ class PreparedSQLPlaceholdersSniff extends Sniff {
 				|| \T_HEREDOC === $this->tokens[ $i ]['code']
 			) {
 				// Only interested in actual query text, so strip out variables.
-				$stripped_content = $this->strip_interpolated_variables( $content );
+				$stripped_content = TextStrings::stripEmbeds( $content );
 				if ( $stripped_content !== $content ) {
-					$interpolated_vars = $this->get_interpolated_variables( $content );
-					$vars_without_wpdb = array_diff( $interpolated_vars, array( 'wpdb' ) );
-					$content           = $stripped_content;
+					$vars_without_wpdb = array_filter(
+						TextStrings::getEmbeds( $content ),
+						function ( $symbol ) {
+							return preg_match( '`^\{?\$\{?wpdb\??->`', $symbol ) !== 1;
+						}
+					);
+
+					$content = $stripped_content;
 
 					if ( ! empty( $vars_without_wpdb ) ) {
 						$variable_found = true;
 					}
 				}
-				unset( $stripped_content, $interpolated_vars, $vars_without_wpdb );
+				unset( $stripped_content, $vars_without_wpdb );
 			}
 
 			$placeholders = preg_match_all( '`' . self::PREPARE_PLACEHOLDER_REGEX . '`x', $content, $matches );

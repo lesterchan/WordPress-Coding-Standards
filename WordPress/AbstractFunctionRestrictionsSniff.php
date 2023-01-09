@@ -9,8 +9,10 @@
 
 namespace WordPressCS\WordPress;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\MessageHelper;
+use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Restricts usage of some functions.
@@ -97,14 +99,14 @@ abstract class AbstractFunctionRestrictionsSniff extends Sniff {
 	 *         'message'   => 'Use anonymous functions instead please!',
 	 *         'functions' => array( 'file_get_contents', 'create_function', 'mysql_*' ),
 	 *         // Only useful when using wildcards:
-	 *         'whitelist' => array( 'mysql_to_rfc3339' => true, ),
+	 *         'allow' => array( 'mysql_to_rfc3339' => true, ),
 	 *     )
 	 * )
 	 *
 	 * You can use * wildcards to target a group of functions.
 	 * When you use * wildcards, you may inadvertently restrict too many
-	 * functions. In that case you can add the `whitelist` key to
-	 * whitelist individual functions to prevent false positives.
+	 * functions. In that case you can add the `allow` key to
+	 * safe list individual functions to prevent false positives.
 	 *
 	 * @return array
 	 */
@@ -182,7 +184,7 @@ abstract class AbstractFunctionRestrictionsSniff extends Sniff {
 	 */
 	public function process_token( $stackPtr ) {
 
-		$this->excluded_groups = $this->merge_custom_array( $this->exclude );
+		$this->excluded_groups = RulesetPropertyHelper::merge_custom_array( $this->exclude );
 		if ( array_diff_key( $this->groups, $this->excluded_groups ) === array() ) {
 			// All groups have been excluded.
 			// Don't remove the listener as the exclude property can be changed inline.
@@ -280,7 +282,7 @@ abstract class AbstractFunctionRestrictionsSniff extends Sniff {
 				continue;
 			}
 
-			if ( isset( $group['whitelist'][ $token_content ] ) ) {
+			if ( isset( $group['allow'][ $token_content ] ) ) {
 				continue;
 			}
 
@@ -310,11 +312,12 @@ abstract class AbstractFunctionRestrictionsSniff extends Sniff {
 	 */
 	public function process_matched_token( $stackPtr, $group_name, $matched_content ) {
 
-		$this->addMessage(
+		MessageHelper::addMessage(
+			$this->phpcsFile,
 			$this->groups[ $group_name ]['message'],
 			$stackPtr,
 			( 'error' === $this->groups[ $group_name ]['type'] ),
-			$this->string_to_errorcode( $group_name . '_' . $matched_content ),
+			MessageHelper::stringToErrorcode( $group_name . '_' . $matched_content ),
 			array( $matched_content )
 		);
 	}
@@ -328,15 +331,15 @@ abstract class AbstractFunctionRestrictionsSniff extends Sniff {
 	 *
 	 * @since 0.10.0
 	 *
-	 * @param string $function Function name.
+	 * @param string $function_name Function name.
 	 * @return string Regex escaped function name.
 	 */
-	protected function prepare_name_for_regex( $function ) {
-		$function = str_replace( array( '.*', '*' ), '@@', $function ); // Replace wildcards with placeholder.
-		$function = preg_quote( $function, '`' );
-		$function = str_replace( '@@', '.*', $function ); // Replace placeholder with regex wildcard.
+	protected function prepare_name_for_regex( $function_name ) {
+		$function_name = str_replace( array( '.*', '*' ), '@@', $function_name ); // Replace wildcards with placeholder.
+		$function_name = preg_quote( $function_name, '`' );
+		$function_name = str_replace( '@@', '.*', $function_name ); // Replace placeholder with regex wildcard.
 
-		return $function;
+		return $function_name;
 	}
 
 }

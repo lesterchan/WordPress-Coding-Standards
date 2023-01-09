@@ -9,7 +9,9 @@
 
 namespace WordPressCS\WordPress;
 
+use PHPCSUtils\Utils\MessageHelper;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
 use WordPressCS\WordPress\Sniff;
 
 /**
@@ -133,7 +135,7 @@ abstract class AbstractArrayAssignmentRestrictionsSniff extends Sniff {
 	 */
 	public function process_token( $stackPtr ) {
 
-		$this->excluded_groups = $this->merge_custom_array( $this->exclude );
+		$this->excluded_groups = RulesetPropertyHelper::merge_custom_array( $this->exclude );
 		if ( array_diff_key( $this->groups_cache, $this->excluded_groups ) === array() ) {
 			// All groups have been excluded.
 			// Don't remove the listener as the exclude property can be changed inline.
@@ -212,11 +214,12 @@ abstract class AbstractArrayAssignmentRestrictionsSniff extends Sniff {
 						$message = $output;
 					}
 
-					$this->addMessage(
+					MessageHelper::addMessage(
+						$this->phpcsFile,
 						$message,
 						$stackPtr,
 						( 'error' === $group['type'] ),
-						$this->string_to_errorcode( $groupName . '_' . $key ),
+						MessageHelper::stringToErrorcode( $groupName . '_' . $key ),
 						array( $key, $val )
 					);
 				}

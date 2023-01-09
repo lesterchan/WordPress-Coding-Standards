@@ -13,7 +13,7 @@ use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\Namespaces;
 use PHPCSUtils\Utils\ObjectDeclarations;
-use WordPressCS\WordPress\Sniff as WPCS_Sniff;
+use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
 
 /**
  * Helper utilities for sniffs which need to take into account whether the
@@ -79,16 +79,21 @@ trait IsUnitTestTrait {
 	 * @var string[]
 	 */
 	protected $known_test_classes = array(
-		'WP_UnitTestCase_Base'                       => true,
+		// Base test cases.
 		'WP_UnitTestCase'                            => true,
+		'WP_UnitTestCase_Base'                       => true,
+		'PHPUnit_Adapter_TestCase'                   => true,
+
+		// Domain specific base test cases.
 		'WP_Ajax_UnitTestCase'                       => true,
-		'Block_Supported_Styles_Test'                => true,
 		'WP_Canonical_UnitTestCase'                  => true,
-		'WP_Test_REST_TestCase'                      => true,
 		'WP_Test_REST_Controller_Testcase'           => true,
 		'WP_Test_REST_Post_Type_Controller_Testcase' => true,
+		'WP_Test_REST_TestCase'                      => true,
 		'WP_Test_XML_TestCase'                       => true,
 		'WP_XMLRPC_UnitTestCase'                     => true,
+
+		// PHPUnit native test cases.
 		'PHPUnit_Framework_TestCase'                 => true,
 		'PHPUnit\Framework\TestCase'                 => true,
 		// PHPUnit native TestCase class when imported via use statement.
@@ -122,7 +127,7 @@ trait IsUnitTestTrait {
 		}
 
 		// Add any potentially extra custom test classes to the known test classes list.
-		$known_test_classes = WPCS_Sniff::merge_custom_array(
+		$known_test_classes = RulesetPropertyHelper::merge_custom_array(
 			$this->custom_test_classes,
 			$this->known_test_classes
 		);
@@ -135,7 +140,7 @@ trait IsUnitTestTrait {
 			$known_test_classes[ $k ] = ltrim( $v, '\\' );
 		}
 
-		// Is the class/trait one of the whitelisted test classes ?
+		// Is the class/trait one of the known test classes ?
 		$namespace = Namespaces::determineNamespace( $phpcsFile, $stackPtr );
 		$className = ObjectDeclarations::getName( $phpcsFile, $stackPtr );
 		if ( '' !== $namespace ) {
@@ -146,7 +151,7 @@ trait IsUnitTestTrait {
 			return true;
 		}
 
-		// Does the class/trait extend one of the whitelisted test classes ?
+		// Does the class/trait extend one of the known test classes ?
 		$extendedClassName = ObjectDeclarations::findExtendedClassName( $phpcsFile, $stackPtr );
 		if ( false === $extendedClassName ) {
 			return false;

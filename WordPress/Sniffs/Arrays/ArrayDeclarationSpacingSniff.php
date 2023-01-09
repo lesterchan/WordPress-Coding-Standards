@@ -24,7 +24,7 @@ use PHPCSUtils\Utils\PassedParameters;
  * - Checks that each array item in a multi-line array starts on a new line.
  * - Checks that the array closer in a multi-line array is on a new line.
  *
- * @link    https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/#indentation
+ * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#indentation
  *
  * @package WPCS\WordPressCodingStandards
  *
@@ -405,7 +405,7 @@ class ArrayDeclarationSpacingSniff extends Sniff {
 						&& substr( rtrim( $this->tokens[ $end_of_comment ]['content'] ), -2 ) !== '*/'
 						&& ( $end_of_comment + 1 ) < $end_of_this_item
 					) {
-						$end_of_comment++;
+						++$end_of_comment;
 					}
 
 					if ( $this->tokens[ $end_of_comment ]['line'] !== $this->tokens[ $end_of_last_item ]['line'] ) {

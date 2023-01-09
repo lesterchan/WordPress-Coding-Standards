@@ -21,7 +21,7 @@ use WordPressCS\WordPress\Sniff;
  * - Allows for new line(s) before a double arrow (configurable).
  * - Allows for handling multi-line array items differently if so desired (configurable).
  *
- * @link    https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/#indentation
+ * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#indentation
  *
  * @package WPCS\WordPressCodingStandards
  *
@@ -358,7 +358,7 @@ class MultipleStatementAlignmentSniff extends Sniff {
 				$items[ $key ]['single_line'] = true;
 			} else {
 				$items[ $key ]['single_line'] = false;
-				$multi_line_count++;
+				++$multi_line_count;
 			}
 
 			if ( ( $index_end_position + 2 ) <= $this->maxColumn ) {
@@ -368,7 +368,7 @@ class MultipleStatementAlignmentSniff extends Sniff {
 			if ( ! isset( $double_arrow_cols[ $this->tokens[ $double_arrow ]['column'] ] ) ) {
 				$double_arrow_cols[ $this->tokens[ $double_arrow ]['column'] ] = 1;
 			} else {
-				$double_arrow_cols[ $this->tokens[ $double_arrow ]['column'] ]++;
+				++$double_arrow_cols[ $this->tokens[ $double_arrow ]['column'] ];
 			}
 		}
 		unset( $key, $item, $double_arrow, $has_array_opener, $last_index_token );
@@ -413,7 +413,7 @@ class MultipleStatementAlignmentSniff extends Sniff {
 				if ( ! isset( $double_arrow_cols[ $this->tokens[ $item['operatorPtr'] ]['column'] ] ) ) {
 					$double_arrow_cols[ $this->tokens[ $item['operatorPtr'] ]['column'] ] = 1;
 				} else {
-					$double_arrow_cols[ $this->tokens[ $item['operatorPtr'] ]['column'] ]++;
+					++$double_arrow_cols[ $this->tokens[ $item['operatorPtr'] ]['column'] ];
 				}
 			}
 		}
@@ -465,12 +465,10 @@ class MultipleStatementAlignmentSniff extends Sniff {
 
 			if ( \T_WHITESPACE !== $this->tokens[ ( $item['operatorPtr'] - 1 ) ]['code'] ) {
 				$before = 0;
+			} elseif ( $this->tokens[ $item['last_index_token'] ]['line'] !== $this->tokens[ $item['operatorPtr'] ]['line'] ) {
+				$before = 'newline';
 			} else {
-				if ( $this->tokens[ $item['last_index_token'] ]['line'] !== $this->tokens[ $item['operatorPtr'] ]['line'] ) {
-					$before = 'newline';
-				} else {
-					$before = $this->tokens[ ( $item['operatorPtr'] - 1 ) ]['length'];
-				}
+				$before = $this->tokens[ ( $item['operatorPtr'] - 1 ) ]['length'];
 			}
 
 			/*
