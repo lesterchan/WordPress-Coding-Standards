@@ -7,18 +7,18 @@
  * @license https://opensource.org/licenses/MIT MIT
  */
 
-namespace WordPressCS\WordPress\Tests\PHP;
+namespace WordPressCS\WordPress\Tests\CodeAnalysis;
 
 use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 
 /**
- * Unit test class for the PHP.NoSilencedErrors sniff.
+ * Unit test class for the AssignmentInTernaryCondition sniff.
  *
  * @package WPCS\WordPressCodingStandards
  *
- * @since   1.1.0
+ * @since   0.14.0
  */
-final class NoSilencedErrorsUnitTest extends AbstractSniffUnitTest {
+final class AssignmentInTernaryConditionUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
@@ -36,31 +36,17 @@ final class NoSilencedErrorsUnitTest extends AbstractSniffUnitTest {
 	 */
 	public function getWarningList() {
 		return array(
-			5  => 1,
-			7  => 1,
-			8  => 1,
-			9  => 1,
-			10 => 1,
-			11 => 1,
-			20 => 1,
-			21 => 1,
-			26 => 1,
-			29 => 1,
-			35 => 1,
-			37 => 1,
-			40 => 1,
-			44 => 1,
-			48 => 1,
-			58 => 2,
-			59 => 1,
-			63 => 1,
-			64 => 1,
-			65 => 1,
-			66 => 1,
-			68 => 1,
-			71 => 1,
-			78 => 1,
-			85 => 1,
+			12 => 1,
+			13 => 1,
+			14 => 2,
+			15 => 1,
+			16 => 1,
+			17 => 2,
+			18 => 3,
+			51 => 2,
+			53 => 1,
+			54 => 1,
+			57 => 1,
 		);
 	}
 }

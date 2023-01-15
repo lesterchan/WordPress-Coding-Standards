@@ -19,7 +19,7 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
  * @since   0.9.0
  * @since   0.13.0 Class name changed: this class is now namespaced.
  */
-class ValidVariableNameUnitTest extends AbstractSniffUnitTest {
+final class ValidVariableNameUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
@@ -82,6 +82,20 @@ class ValidVariableNameUnitTest extends AbstractSniffUnitTest {
 			182 => 1,
 			184 => 1,
 			186 => 1,
+			190 => 1,
+			199 => 1,
+			200 => 1,
+			202 => 1,
+			204 => 1,
+			211 => 2,
+			212 => 2,
+			213 => 2,
+			216 => 1,
+			219 => 1,
+			225 => 1,
+			227 => 1,
+			238 => function_exists( 'mb_strtolower' ) ? 1 : 0,
+			239 => 1,
 		);
 	}
 

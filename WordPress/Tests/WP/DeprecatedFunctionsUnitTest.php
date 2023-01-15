@@ -19,7 +19,7 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
  * @since   0.11.0
  * @since   0.13.0 Class name changed: this class is now namespaced.
  */
-class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
+final class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
@@ -97,7 +97,7 @@ class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
 		);
 
 		// Temporarily until PHPCS supports PHP 8.2.
-		if ( PHP_VERSION_ID >= 80200 ) {
+		if ( \PHP_VERSION_ID >= 80200 ) {
 			unset( $warnings[364] ); // Function call to readonly.
 		}
 

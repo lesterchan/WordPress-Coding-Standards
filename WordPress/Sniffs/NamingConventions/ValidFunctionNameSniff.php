@@ -11,9 +11,11 @@ namespace WordPressCS\WordPress\Sniffs\NamingConventions;
 
 use PHPCSUtils\BackCompat\BCTokens;
 use PHPCSUtils\Utils\FunctionDeclarations;
+use PHPCSUtils\Utils\NamingConventions;
 use PHPCSUtils\Utils\ObjectDeclarations;
 use PHPCSUtils\Utils\Scopes;
 use WordPressCS\WordPress\Helpers\DeprecationHelper;
+use WordPressCS\WordPress\Helpers\SnakeCaseHelper;
 use WordPressCS\WordPress\Sniff;
 
 /**
@@ -31,7 +33,7 @@ use WordPressCS\WordPress\Sniff;
  * @since   3.0.0  This sniff has been refactored and no longer extends the upstream
  *                 PEAR.NamingConventions.ValidFunctionName sniff.
  */
-class ValidFunctionNameSniff extends Sniff {
+final class ValidFunctionNameSniff extends Sniff {
 
 	/**
 	 * Returns an array of tokens this test wants to listen for.
@@ -98,7 +100,6 @@ class ValidFunctionNameSniff extends Sniff {
 	 * @return void
 	 */
 	protected function process_function_declaration( $stackPtr, $functionName ) {
-
 		// PHP magic functions are exempt from our rules.
 		if ( FunctionDeclarations::isMagicFunctionName( $functionName ) === true ) {
 			return;
@@ -111,11 +112,12 @@ class ValidFunctionNameSniff extends Sniff {
 			$this->phpcsFile->addError( $error, $stackPtr, 'FunctionDoubleUnderscore', $errorData );
 		}
 
-		if ( strtolower( $functionName ) !== $functionName ) {
+		$suggested_name = SnakeCaseHelper::get_suggestion( $functionName );
+		if ( $suggested_name !== $functionName ) {
 			$error     = 'Function name "%s" is not in snake case format, try "%s"';
 			$errorData = array(
 				$functionName,
-				$this->get_snake_case_name_suggestion( $functionName ),
+				$suggested_name,
 			);
 			$this->phpcsFile->addError( $error, $stackPtr, 'FunctionNameInvalid', $errorData );
 		}
@@ -126,7 +128,7 @@ class ValidFunctionNameSniff extends Sniff {
 	 *
 	 * @since 0.1.0
 	 * @since 3.0.0 Renamed from `processTokenWithinScope()` to `process_method_declaration()`.
-	 *              Method signature has been changed as well as this method no longer overloads
+	 *              Method signature has been changed as well, as this method no longer overloads
 	 *              a method from the PEAR sniff which was previously the sniff parent.
 	 *
 	 * @param int    $stackPtr   The position where this token was found.
@@ -141,19 +143,16 @@ class ValidFunctionNameSniff extends Sniff {
 			$className = '[Anonymous Class]';
 		} else {
 			$className = ObjectDeclarations::getName( $this->phpcsFile, $currScope );
-		}
 
-		$methodNameLc = strtolower( $methodName );
-		$classNameLc  = strtolower( $className );
+			// PHP4 constructors are allowed to break our rules.
+			if ( NamingConventions::isEqual( $methodName, $className ) === true ) {
+				return;
+			}
 
-		// PHP4 constructors are allowed to break our rules.
-		if ( $methodNameLc === $classNameLc ) {
-			return;
-		}
-
-		// PHP4 destructors are allowed to break our rules.
-		if ( '_' . $classNameLc === $methodNameLc ) {
-			return;
+			// PHP4 destructors are allowed to break our rules.
+			if ( NamingConventions::isEqual( $methodName, '_' . $className ) === true ) {
+				return;
+			}
 		}
 
 		// PHP magic methods are exempt from our rules.
@@ -177,15 +176,15 @@ class ValidFunctionNameSniff extends Sniff {
 		}
 
 		// Check for all lowercase.
-		if ( $methodNameLc !== $methodName ) {
+		$suggested_name = SnakeCaseHelper::get_suggestion( $methodName );
+		if ( $suggested_name !== $methodName ) {
 			$error     = 'Method name "%s" in class %s is not in snake case format, try "%s"';
 			$errorData = array(
 				$methodName,
 				$className,
-				$this->get_snake_case_name_suggestion( $methodName ),
+				$suggested_name,
 			);
 			$this->phpcsFile->addError( $error, $stackPtr, 'MethodNameInvalid', $errorData );
 		}
 	}
-
 }
