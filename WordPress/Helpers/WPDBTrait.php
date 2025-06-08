@@ -17,10 +17,8 @@ use PHPCSUtils\Tokens\Collections;
 /**
  * Helper utilities for sniffs which examine WPDB method calls.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   3.0.0 The method in this trait was previously contained in the
- *                `WordPressCS\WordPress\Sniff` class and has been moved here.
+ * @since 3.0.0 The method in this trait was previously contained in the
+ *              `WordPressCS\WordPress\Sniff` class and has been moved here.
  */
 trait WPDBTrait {
 
@@ -37,7 +35,7 @@ trait WPDBTrait {
 	 *               vars are automatically updated.
 	 * @since 0.14.0 Moved this method from the `PreparedSQL` sniff to the base WP sniff.
 	 * @since 3.0.0  - Moved from the Sniff class to this dedicated Trait.
-	 *               - The $phpcsFile parameter was added.
+	 *               - The `$phpcsFile` parameter was added.
 	 *
 	 * {@internal This method should be refactored to not exhibit "magic" behaviour
 	 *            for properties in the sniff class(es) using it.}}
@@ -49,9 +47,11 @@ trait WPDBTrait {
 	 *
 	 * @return bool Whether this is a $wpdb method call.
 	 */
-	protected function is_wpdb_method_call( File $phpcsFile, $stackPtr, $target_methods ) {
-
+	final protected function is_wpdb_method_call( File $phpcsFile, $stackPtr, array $target_methods ) {
 		$tokens = $phpcsFile->getTokens();
+		if ( isset( $tokens[ $stackPtr ] ) === false ) {
+			return false;
+		}
 
 		// Check for wpdb.
 		if ( ( \T_VARIABLE === $tokens[ $stackPtr ]['code'] && '$wpdb' !== $tokens[ $stackPtr ]['content'] )

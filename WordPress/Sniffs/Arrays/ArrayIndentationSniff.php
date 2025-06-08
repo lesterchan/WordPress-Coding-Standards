@@ -9,22 +9,20 @@
 
 namespace WordPressCS\WordPress\Sniffs\Arrays;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\BackCompat\Helper;
 use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\Arrays;
 use PHPCSUtils\Utils\PassedParameters;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Enforces WordPress array indentation for multi-line arrays.
  *
- * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#indentation
+ * @link https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#indentation
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.12.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.12.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  *
  * {@internal This sniff should eventually be pulled upstream as part of a solution
  * for https://github.com/squizlabs/PHP_CodeSniffer/issues/582 }}
@@ -245,7 +243,7 @@ final class ArrayIndentationSniff extends Sniff {
 			 * Multi-line array items.
 			 *
 			 * Verify & if needed, correct the indentation of subsequent lines.
-			 * Subsequent lines may be indented more or less than the mimimum expected indent,
+			 * Subsequent lines may be indented more or less than the minimum expected indent,
 			 * but the "first line after" should be indented - at least - as much as the very first line
 			 * of the array item.
 			 * Indentation correction for subsequent lines will be based on that diff.
@@ -523,6 +521,8 @@ final class ArrayIndentationSniff extends Sniff {
 	 * @param int    $expected   Expected nr of spaces (tabs translated to space value).
 	 * @param int    $found      Found nr of spaces (tabs translated to space value).
 	 * @param string $new_indent Whitespace indent replacement content.
+	 *
+	 * @return void
 	 */
 	protected function add_array_alignment_error( $ptr, $error, $error_code, $expected, $found, $new_indent ) {
 
@@ -537,6 +537,8 @@ final class ArrayIndentationSniff extends Sniff {
 	 *
 	 * @param int    $ptr        Stack pointer to the first content on the line.
 	 * @param string $new_indent Whitespace indent replacement content.
+	 *
+	 * @return void
 	 */
 	protected function fix_alignment_error( $ptr, $new_indent ) {
 		if ( 1 === $this->tokens[ $ptr ]['column'] ) {
@@ -545,5 +547,4 @@ final class ArrayIndentationSniff extends Sniff {
 			$this->phpcsFile->fixer->replaceToken( ( $ptr - 1 ), $new_indent );
 		}
 	}
-
 }

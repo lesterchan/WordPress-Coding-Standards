@@ -185,7 +185,7 @@ EOD;
 define( 'WORDPRESS_SOMETHING', 'wordpress' ); // OK.
 class TestMe {
 	public const MY_CONST = 123,
-		ANOTHER => array( 'a' => 'b' ),
+		ANOTHER = array( 'a' => 'b' ),
 		WORDPRESS_SOMETHING = 'wordpress'; // OK (complex declaration to make sure start of statement is detected correctly).
 }
 
@@ -200,7 +200,7 @@ echo namespace\function_name(); // OK - operator.
 namespace Foo\WordPress\Bar; // OK.
 namespace My_WordPress_Plugin; // OK.
 
-namespace Foo\Bar\Wordpress\; // Bad.
+namespace Foo\Bar\Wordpress; // Bad.
 namespace Foo\word_presss\Bar; // Bad.
 namespace My_Wordpresss_Plugin\Foo\Bar; // Bad.
 
@@ -228,3 +228,6 @@ enum My_Wordpress_Enum {} // Bad.
  */
 namespace My\Class\WordPress;
 echo Some\Enum\WordPress::ENUM_CONSTANT;
+
+// Safeguard that the sniff doesn't act on anonymous classes.
+$anon = new class() {};

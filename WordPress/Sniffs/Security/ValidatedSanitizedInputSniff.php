@@ -9,26 +9,34 @@
 
 namespace WordPressCS\WordPress\Sniffs\Security;
 
+use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\Utils\Context;
 use PHPCSUtils\Utils\TextStrings;
-use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
+use PHPCSUtils\Utils\Variables;
+use WordPressCS\WordPress\Helpers\ContextHelper;
+use WordPressCS\WordPress\Helpers\SanitizationHelperTrait;
+use WordPressCS\WordPress\Helpers\ValidationHelper;
 use WordPressCS\WordPress\Helpers\VariableHelper;
 use WordPressCS\WordPress\Sniff;
 
 /**
  * Flag any non-validated/sanitized input ( _GET / _POST / etc. ).
  *
- * @link    https://github.com/WordPress/WordPress-Coding-Standards/issues/69
+ * @link https://github.com/WordPress/WordPress-Coding-Standards/issues/69
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.3.0
+ * @since 0.4.0  This class now extends the WordPressCS native `Sniff` class.
+ * @since 0.5.0  Method getArrayIndexKey() has been moved to the WordPressCS native `Sniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `VIP` category to the `Security` category.
  *
- * @since   0.3.0
- * @since   0.4.0  This class now extends the WordPressCS native `Sniff` class.
- * @since   0.5.0  Method getArrayIndexKey() has been moved to the WordPressCS native `Sniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `VIP` category to the `Security` category.
+ * @uses \WordPressCS\WordPress\Helpers\SanitizationHelperTrait::$customSanitizingFunctions
+ * @uses \WordPressCS\WordPress\Helpers\SanitizationHelperTrait::$customUnslashingSanitizingFunctions
  */
 class ValidatedSanitizedInputSniff extends Sniff {
+
+	use SanitizationHelperTrait;
 
 	/**
 	 * Check for validation functions for a variable within its own parenthesis only.
@@ -38,37 +46,20 @@ class ValidatedSanitizedInputSniff extends Sniff {
 	public $check_validation_in_scope_only = false;
 
 	/**
-	 * Custom list of functions that sanitize the values passed to them.
+	 * Superglobals for which the values will be slashed by WP.
 	 *
-	 * @since 0.5.0
+	 * @link https://developer.wordpress.org/reference/functions/wp_magic_quotes/
 	 *
-	 * @var string|string[]
+	 * @since 3.0.0
+	 *
+	 * @var array<string, true>
 	 */
-	public $customSanitizingFunctions = array();
-
-	/**
-	 * Custom sanitizing functions that implicitly unslash the values passed to them.
-	 *
-	 * @since 0.5.0
-	 *
-	 * @var string|string[]
-	 */
-	public $customUnslashingSanitizingFunctions = array();
-
-	/**
-	 * Cache of previously added custom functions.
-	 *
-	 * Prevents having to do the same merges over and over again.
-	 *
-	 * @since 0.5.0
-	 * @since 0.11.0 - Changed from static to non-static.
-	 *               - Changed the format from simple bool to array.
-	 *
-	 * @var array
-	 */
-	protected $addedCustomFunctions = array(
-		'sanitize'        => array(),
-		'unslashsanitize' => array(),
+	private $slashed_superglobals = array(
+		'$_COOKIE'  => true,
+		'$_GET'     => true,
+		'$_POST'    => true,
+		'$_REQUEST' => true,
+		'$_SERVER'  => true,
 	);
 
 	/**
@@ -93,29 +84,44 @@ class ValidatedSanitizedInputSniff extends Sniff {
 	 */
 	public function process_token( $stackPtr ) {
 
-		$superglobals = $this->input_superglobals;
-
 		// Handling string interpolation.
 		if ( \T_DOUBLE_QUOTED_STRING === $this->tokens[ $stackPtr ]['code']
 			|| \T_HEREDOC === $this->tokens[ $stackPtr ]['code']
 		) {
 			// Retrieve all embeds, but use only the initial variable name part.
 			$interpolated_variables = array_map(
-				function( $embed ) {
-					return '$' . preg_replace( '`^(\{?\$\{?\(?)([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)(.*)$`', '$2', $embed );
+				static function ( $embed ) {
+					return preg_replace( '`^(\{?\$\{?\(?)([a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)(.*)$`', '$2', $embed );
 				},
 				TextStrings::getEmbeds( $this->tokens[ $stackPtr ]['content'] )
 			);
 
-			foreach ( array_intersect( $interpolated_variables, $superglobals ) as $bad_variable ) {
+			// Filter the embeds down to superglobals only.
+			$interpolated_superglobals = array_filter(
+				$interpolated_variables,
+				static function ( $var_name ) {
+					return ( 'GLOBALS' !== $var_name && Variables::isSuperglobalName( $var_name ) );
+				}
+			);
+
+			foreach ( $interpolated_superglobals as $bad_variable ) {
 				$this->phpcsFile->addError( 'Detected usage of a non-sanitized, non-validated input variable %s: %s', $stackPtr, 'InputNotValidatedNotSanitized', array( $bad_variable, $this->tokens[ $stackPtr ]['content'] ) );
 			}
 
 			return;
 		}
 
-		// Check if this is a superglobal.
-		if ( ! \in_array( $this->tokens[ $stackPtr ]['content'], $superglobals, true ) ) {
+		/* Handle variables */
+
+		// Check if this is a superglobal we want to examine.
+		if ( '$GLOBALS' === $this->tokens[ $stackPtr ]['content']
+			|| Variables::isSuperglobalName( $this->tokens[ $stackPtr ]['content'] ) === false
+		) {
+			return;
+		}
+
+		// If the variable is being unset, we don't care about it.
+		if ( Context::inUnset( $this->phpcsFile, $stackPtr ) ) {
 			return;
 		}
 
@@ -125,7 +131,7 @@ class ValidatedSanitizedInputSniff extends Sniff {
 		}
 
 		// This superglobal is being validated.
-		if ( $this->is_in_isset_or_empty( $stackPtr ) ) {
+		if ( ContextHelper::is_in_isset_or_empty( $this->phpcsFile, $stackPtr ) ) {
 			return;
 		}
 
@@ -164,7 +170,7 @@ class ValidatedSanitizedInputSniff extends Sniff {
 		}
 
 		if ( false === $validated ) {
-			$validated = $this->is_validated( $stackPtr, $array_keys, $this->check_validation_in_scope_only );
+			$validated = ValidationHelper::is_validated( $this->phpcsFile, $stackPtr, $array_keys, $this->check_validation_in_scope_only );
 		}
 
 		if ( false === $validated ) {
@@ -177,7 +183,7 @@ class ValidatedSanitizedInputSniff extends Sniff {
 		}
 
 		// If this variable is being tested with one of the `is_..()` functions, sanitization isn't needed.
-		if ( $this->is_in_type_test( $stackPtr ) ) {
+		if ( ContextHelper::is_in_type_test( $this->phpcsFile, $stackPtr ) ) {
 			return;
 		}
 
@@ -187,14 +193,12 @@ class ValidatedSanitizedInputSniff extends Sniff {
 		}
 
 		// If this is a comparison using the array comparison functions, sanitization isn't needed.
-		if ( $this->is_in_array_comparison( $stackPtr ) ) {
+		if ( ContextHelper::is_in_array_comparison( $this->phpcsFile, $stackPtr ) ) {
 			return;
 		}
 
-		$this->mergeFunctionLists();
-
 		// Now look for sanitizing functions.
-		if ( ! $this->is_sanitized( $stackPtr, true ) ) {
+		if ( ! $this->is_sanitized( $this->phpcsFile, $stackPtr, array( $this, 'add_unslash_error' ) ) ) {
 			$this->phpcsFile->addError(
 				'Detected usage of a non-sanitized input variable: %s',
 				$stackPtr,
@@ -205,30 +209,36 @@ class ValidatedSanitizedInputSniff extends Sniff {
 	}
 
 	/**
-	 * Merge custom functions provided via a custom ruleset with the defaults, if we haven't already.
+	 * Add an error for missing use of unslashing.
 	 *
-	 * @since 0.11.0 Split out from the `process()` method.
+	 * @since 0.5.0
+	 * @since 3.0.0 - Moved from the `Sniff` class to this class.
+	 *              - The `$phpcsFile` parameter was added.
+	 *
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int                         $stackPtr  The index of the token in the stack
+	 *                                               which is missing unslashing.
 	 *
 	 * @return void
 	 */
-	protected function mergeFunctionLists() {
-		if ( $this->customSanitizingFunctions !== $this->addedCustomFunctions['sanitize'] ) {
-			$this->sanitizingFunctions = RulesetPropertyHelper::merge_custom_array(
-				$this->customSanitizingFunctions,
-				$this->sanitizingFunctions
-			);
+	public function add_unslash_error( File $phpcsFile, $stackPtr ) {
+		$tokens   = $phpcsFile->getTokens();
+		$var_name = $tokens[ $stackPtr ]['content'];
 
-			$this->addedCustomFunctions['sanitize'] = $this->customSanitizingFunctions;
+		if ( isset( $this->slashed_superglobals[ $var_name ] ) === false ) {
+			// WP doesn't slash these, so they don't need unslashing.
+			return;
 		}
 
-		if ( $this->customUnslashingSanitizingFunctions !== $this->addedCustomFunctions['unslashsanitize'] ) {
-			$this->unslashingSanitizingFunctions = RulesetPropertyHelper::merge_custom_array(
-				$this->customUnslashingSanitizingFunctions,
-				$this->unslashingSanitizingFunctions
-			);
+		// We know there will be array keys as that's checked in the process_token() method.
+		$array_keys = VariableHelper::get_array_access_keys( $phpcsFile, $stackPtr );
+		$error_data = array( $var_name . '[' . implode( '][', $array_keys ) . ']' );
 
-			$this->addedCustomFunctions['unslashsanitize'] = $this->customUnslashingSanitizingFunctions;
-		}
+		$phpcsFile->addError(
+			'%s not unslashed before sanitization. Use wp_unslash() or similar',
+			$stackPtr,
+			'MissingUnslash',
+			$error_data
+		);
 	}
-
 }

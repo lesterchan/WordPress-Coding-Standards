@@ -9,20 +9,17 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
-use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 use PHP_CodeSniffer\Util\Tokens;
-use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\MessageHelper;
 use PHPCSUtils\Utils\PassedParameters;
-use PHPCSUtils\Utils\Scopes;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\AbstractFunctionParameterSniff;
+use WordPressCS\WordPress\Helpers\ConstantsHelper;
 
 /**
  * Warns against usage of discouraged WP CONSTANTS and recommends alternatives.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.14.0
+ * @since 0.14.0
  */
 final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 
@@ -54,8 +51,8 @@ final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 	 * @since 3.0.0  The format of the value has changed from an integer parameter
 	 *               position to an array with the parameter position and name.
 	 *
-	 * @var array<string, <string, in|string>> Function name as key, array with target
-	 *                                         parameter and name as value.
+	 * @var array<string, array<string, int|string>> Function name as key, array with target
+	 *                                               parameter and name as value.
 	 */
 	protected $target_functions = array(
 		'define' => array(
@@ -63,32 +60,6 @@ final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 			'name'     => 'constant_name',
 		),
 	);
-
-	/**
-	 * Array of tokens which if found preceding the $stackPtr indicate that a T_STRING is not a constant.
-	 *
-	 * Additional tokens are added from within the contructor.
-	 *
-	 * @var array
-	 */
-	private $preceding_tokens_to_ignore = array(
-		\T_NAMESPACE       => true,
-		\T_USE             => true,
-		\T_EXTENDS         => true,
-		\T_IMPLEMENTS      => true,
-		\T_NEW             => true,
-		\T_FUNCTION        => true,
-		\T_INSTANCEOF      => true,
-		\T_GOTO            => true,
-	);
-
-	/**
-	 * Constructor to enrich a property.
-	 */
-	public function __construct() {
-		$this->preceding_tokens_to_ignore += Tokens::$ooScopeTokens;
-		$this->preceding_tokens_to_ignore += Collections::objectOperators();
-	}
 
 	/**
 	 * Processes this test, when one of its tokens is encountered.
@@ -128,60 +99,10 @@ final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
-		$next = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $stackPtr + 1 ), null, true );
-		if ( false !== $next && \T_OPEN_PARENTHESIS === $this->tokens[ $next ]['code'] ) {
-			// Function call or declaration.
+		if ( ConstantsHelper::is_use_of_global_constant( $this->phpcsFile, $stackPtr ) === false ) {
 			return;
 		}
 
-		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true );
-		if ( false !== $prev && isset( $this->preceding_tokens_to_ignore[ $this->tokens[ $prev ]['code'] ] ) ) {
-			// Not the use of a constant.
-			return;
-		}
-
-		if ( $this->is_token_namespaced( $stackPtr ) === true ) {
-			// Namespaced constant of the same name.
-			return;
-		}
-
-		if ( false !== $prev
-			&& \T_CONST === $this->tokens[ $prev ]['code']
-			&& true === Scopes::isOOConstant( $this->phpcsFile, $prev )
-		) {
-			// Class constant of the same name.
-			return;
-		}
-
-		/*
-		 * Deal with a number of variations of use statements.
-		 */
-		for ( $i = $stackPtr; $i > 0; $i-- ) {
-			if ( $this->tokens[ $i ]['line'] !== $this->tokens[ $stackPtr ]['line'] ) {
-				break;
-			}
-		}
-
-		$first_on_line = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $i + 1 ), null, true );
-		if ( false !== $first_on_line && \T_USE === $this->tokens[ $first_on_line ]['code'] ) {
-			$next_on_line = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $first_on_line + 1 ), null, true );
-			if ( false !== $next_on_line ) {
-				if ( \T_STRING === $this->tokens[ $next_on_line ]['code']
-					&& 'const' === $this->tokens[ $next_on_line ]['content']
-				) {
-					$has_ns_sep = $this->phpcsFile->findNext( \T_NS_SEPARATOR, ( $next_on_line + 1 ), $stackPtr );
-					if ( false !== $has_ns_sep ) {
-						// Namespaced const (group) use statement.
-						return;
-					}
-				} else {
-					// Not a const use statement.
-					return;
-				}
-			}
-		}
-
-		// Ok, this is really one of the discouraged constants.
 		$this->phpcsFile->addWarning(
 			'Found usage of constant "%s". Use %s instead.',
 			$stackPtr,
@@ -200,14 +121,14 @@ final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
 	 */
 	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
-		$function_name = strtolower( $matched_content );
-		$target_param  = $this->target_functions[ $function_name ];
+		$target_param = $this->target_functions[ $matched_content ];
 
 		// Was the target parameter passed ?
 		$found_param = PassedParameters::getParameterFromStack( $parameters, $target_param['position'], $target_param['name'] );
@@ -236,5 +157,4 @@ final class DiscouragedConstantsSniff extends AbstractFunctionParameterSniff {
 			);
 		}
 	}
-
 }

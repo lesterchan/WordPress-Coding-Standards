@@ -17,9 +17,10 @@ namespace WordPressCS\WordPress\Helpers;
  * This also means that it has no promise of backward compatibility. Use at your own risk.
  * ---------------------------------------------------------------------------------------------
  *
- * @package WPCS\WordPressCodingStandards
- * @since   3.0.0 The method in this class was previously contained in the
- *                `WordPressCS\WordPress\Sniff` class and has been moved here.
+ * @internal
+ *
+ * @since 3.0.0 The method in this class was previously contained in the
+ *              `WordPressCS\WordPress\Sniff` class and has been moved here.
  */
 final class RulesetPropertyHelper {
 
@@ -50,7 +51,7 @@ final class RulesetPropertyHelper {
 	 *                      Defaults to true.
 	 * @return array
 	 */
-	public static function merge_custom_array( $custom, $base = array(), $flip = true ) {
+	public static function merge_custom_array( $custom, array $base = array(), $flip = true ) {
 		if ( true === $flip ) {
 			$base = array_filter( $base );
 		}

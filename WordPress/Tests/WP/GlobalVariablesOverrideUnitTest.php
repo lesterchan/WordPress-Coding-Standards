@@ -14,12 +14,14 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the GlobalVariables sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.3.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `Variables` category to the `WP`
+ *               category and renamed from `GlobalVariables` to `GlobalVariablesOverride`.
  *
- * @since   0.3.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `Variables` category to the `WP`
- *                 category and renamed from `GlobalVariables` to `GlobalVariablesOverride`.
+ * @covers \WordPressCS\WordPress\Helpers\ListHelper
+ * @covers \WordPressCS\WordPress\Helpers\WPGlobalVariablesHelper
+ * @covers \WordPressCS\WordPress\Sniffs\WP\GlobalVariablesOverrideSniff
  */
 final class GlobalVariablesOverrideUnitTest extends AbstractSniffUnitTest {
 
@@ -28,7 +30,7 @@ final class GlobalVariablesOverrideUnitTest extends AbstractSniffUnitTest {
 	 *
 	 * @param string $testFile The name of the file being tested.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList( $testFile = '' ) {
 		switch ( $testFile ) {
@@ -55,7 +57,6 @@ final class GlobalVariablesOverrideUnitTest extends AbstractSniffUnitTest {
 					143 => 1,
 					146 => 1,
 					181 => 1,
-					198 => 1,
 					212 => 4,
 					230 => 2,
 					231 => 2,
@@ -87,6 +88,11 @@ final class GlobalVariablesOverrideUnitTest extends AbstractSniffUnitTest {
 					29 => 1,
 				);
 
+			case 'GlobalVariablesOverrideUnitTest.7.inc':
+				return array(
+					19 => 1,
+				);
+
 			default:
 				return array();
 		}
@@ -95,10 +101,9 @@ final class GlobalVariablesOverrideUnitTest extends AbstractSniffUnitTest {
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
 		return array();
 	}
-
 }

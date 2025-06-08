@@ -15,9 +15,10 @@ use PHPCSUtils\BackCompat\Helper;
 /**
  * Unit test class for the I18nTextDomainFixer sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 1.2.0
  *
- * @since   1.2.0
+ * @covers \WordPressCS\WordPress\AbstractFunctionParameterSniff::is_targetted_token
+ * @covers \WordPressCS\WordPress\Sniffs\Utils\I18nTextDomainFixerSniff
  */
 final class I18nTextDomainFixerUnitTest extends AbstractSniffUnitTest {
 
@@ -49,7 +50,8 @@ final class I18nTextDomainFixerUnitTest extends AbstractSniffUnitTest {
 	 * Returns the lines where errors should occur.
 	 *
 	 * @param string $testFile The name of the file being tested.
-	 * @return array <int line number> => <int number of errors>
+	 *
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList( $testFile = '' ) {
 
@@ -147,6 +149,8 @@ final class I18nTextDomainFixerUnitTest extends AbstractSniffUnitTest {
 					241 => 1,
 					242 => 1,
 					245 => 1,
+					277 => 1,
+					278 => 1,
 				);
 
 			default:
@@ -158,7 +162,8 @@ final class I18nTextDomainFixerUnitTest extends AbstractSniffUnitTest {
 	 * Returns the lines where warnings should occur.
 	 *
 	 * @param string $testFile The name of the file being tested.
-	 * @return array <int line number> => <int number of warnings>
+	 *
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList( $testFile = '' ) {
 		switch ( $testFile ) {
@@ -195,5 +200,4 @@ final class I18nTextDomainFixerUnitTest extends AbstractSniffUnitTest {
 				return array();
 		}
 	}
-
 }

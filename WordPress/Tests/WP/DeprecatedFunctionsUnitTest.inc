@@ -354,10 +354,6 @@ wp_unregister_GLOBALS();
 noindex();
 wp_no_robots();
 wp_sensitive_page_meta();
-
-/*
- * Warning.
- */
 /* ============ WP 5.8 ============ */
 _excerpt_render_inner_columns_blocks();
 /* ============ WP 5.9 ============ */
@@ -384,3 +380,49 @@ install_global_terms();
 sync_category_tag_slugs();
 wp_get_attachment_thumb_file();
 wp_typography_get_css_variable_inline_style();
+
+/*
+ * Warning.
+ */
+/* ============ WP 6.2 ============ */
+_resolve_home_block_template();
+get_page_by_title();
+/* ============ WP 6.3 ============ */
+_wp_tinycolor_bound_alpha();
+block_core_navigation_get_classic_menu_fallback();
+block_core_navigation_get_classic_menu_fallback_blocks();
+block_core_navigation_get_most_recently_published_navigation();
+block_core_navigation_maybe_use_classic_menu_fallback();
+block_core_navigation_parse_blocks_from_menu_items();
+block_core_navigation_submenu_build_css_colors();
+wlwmanifest_link();
+wp_get_duotone_filter_id();
+wp_get_duotone_filter_property();
+wp_get_duotone_filter_svg();
+wp_get_global_styles_svg_filters();
+wp_get_loading_attr_default();
+wp_global_styles_render_svg_filters();
+wp_img_tag_add_loading_attr();
+wp_queue_comments_for_comment_meta_lazyload();
+wp_register_duotone_support();
+wp_render_duotone_support();
+wp_tinycolor_bound01();
+wp_tinycolor_hsl_to_rgb();
+wp_tinycolor_hue_to_rgb();
+wp_tinycolor_rgb_to_rgb();
+wp_tinycolor_string_to_rgb();
+/* ============ WP 6.4 ============ */
+_admin_bar_bump_cb();
+_inject_theme_attribute_in_block_template_content();
+_remove_theme_attribute_in_block_template_content();
+_wp_theme_json_webfonts_handler();
+print_embed_styles();
+print_emoji_styles();
+the_block_template_skip_link();
+wp_admin_bar_header();
+wp_img_tag_add_decoding_attr();
+wp_update_https_detection_errors();
+/* ============ WP 6.5 ============ */
+block_core_file_ensure_interactivity_dependency();
+block_core_image_ensure_interactivity_dependency();
+block_core_query_ensure_interactivity_dependency();

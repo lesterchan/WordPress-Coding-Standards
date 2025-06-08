@@ -1,9 +1,15 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="WordPress Extra" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="WordPress-Extra" xsi:noNamespaceSchemaLocation="https://schema.phpcodesniffer.com/phpcs.xsd">
 
 	<description>Best practices beyond core WordPress Coding Standards</description>
 
 	<rule ref="WordPress-Core"/>
+
+	<!-- Silence the "no nested dirnames, use $levels" notice, which is included in Core,
+		 as plugin/themes may still support PHP < 7.0. -->
+	<rule ref="Modernize.FunctionCalls.Dirname.Nested">
+		<severity>0</severity>
+	</rule>
 
 	<!-- Generic PHP best practices.
 		 https://github.com/WordPress/WordPress-Coding-Standards/pull/382 -->
@@ -34,8 +40,12 @@
 		 https://github.com/WordPress/WordPress-Coding-Standards/pull/809 -->
 	<rule ref="Squiz.PHP.DisallowSizeFunctionsInLoops"/>
 
+	<!-- Do not allow ambiguous conditions.
+		 https://github.com/WordPress/WordPress-Coding-Standards/issues/2429 -->
+	<rule ref="Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence"/>
+
 	<!-- Check that functions use all parameters passed.
-		 https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/pull/xxx -->
+		 https://github.com/WordPress/WordPress-Coding-Standards/issues/1510 -->
 	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
 		<!-- Allow for callback functions which may not need all parameters passed. -->
 		<exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed"/>
@@ -154,7 +164,7 @@
 	<rule ref="Universal.Arrays.DuplicateArrayKey"/>
 
 	<!-- Disallows return type declarations on constructor/destructor methods,
-		and constructor/destructor methods returning a value. -->
+		 and constructor/destructor methods returning a value. -->
 	<rule ref="Universal.CodeAnalysis.ConstructorDestructorReturn"/>
 
 	<!-- Detects foreach control structures using the same variable for both key and value. -->
@@ -167,8 +177,19 @@
 	<rule ref="Universal.ControlStructures.DisallowLonelyIf"/>
 
 	<!-- Enforce for a file to either declare (global/namespaced) functions
-		or declare object-oriented structures, but not both. -->
+		 or declare object-oriented structures, but not both. -->
 	<rule ref="Universal.Files.SeparateFunctionsFromOO"/>
+
+	<!-- Detect useless "echo sprintf(...)". -->
+	<rule ref="Universal.CodeAnalysis.NoEchoSprintf"/>
+
+	<!-- Detect use of double negative `!!`. -->
+	<rule ref="Universal.CodeAnalysis.NoDoubleNegative"/>
+
+	<!-- Flags calls to get_*_meta() and get_metadata*() functions
+		 that include the $[meta_]key parameter but omit the $single parameter.
+		 https://github.com/WordPress/WordPress-Coding-Standards/issues/2459 -->
+	<rule ref="WordPress.WP.GetMetaSingle"/>
 
 	<!--
 	#############################################################################

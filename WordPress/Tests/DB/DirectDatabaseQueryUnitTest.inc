@@ -16,8 +16,8 @@ function bar() {
 	return $listofthings;
 }
 
-function dummy() {
-}
+
+
 
 function baz() {
 	global $wpdb;
@@ -290,7 +290,7 @@ function nullsafe_object_operator() {
 
 function stabilize_token_walking($other_db) {
 	global $wpdb;
-	// Overwritting $wpdb is bad, of course, but that's not the concern of this sniff.
+	// Overwriting $wpdb is bad, of course, but that's not the concern of this sniff.
 	// This test is making sure that the `$other_db->query` code is not flagged as if it were a call to a `$wpdb` method.
 	$wpdb = $other_db->query;
 }
@@ -317,3 +317,22 @@ function stay_silent_for_truncate_query() {
 		)
 	);
 }
+
+function stay_silent_for_truncate_query_lowercase_sql_keywords() {
+	global $wpdb;
+	$wpdb->query(
+		$wpdb->prepare(
+			'truncate table `%1$s`',
+			plugin_get_table_name( 'Name' )
+		)
+	);
+}
+
+function method_names_are_caseinsensitive() {
+	global $wpdb;
+	$autoload = $wpdb->Get_Var( $wpdb->Prepare( "SELECT autoload FROM $wpdb->options WHERE option_name = %s", $option_name ) ); // Warning x 2.
+}
+
+// Live coding/parse error test.
+// This must be the last test in the file.
+$wpdb->get_col( '

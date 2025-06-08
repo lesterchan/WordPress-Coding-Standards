@@ -10,6 +10,7 @@
 namespace WordPressCS\WordPress\Sniffs\CodeAnalysis;
 
 use PHP_CodeSniffer\Util\Tokens;
+use PHPCSUtils\BackCompat\BCFile;
 use PHPCSUtils\Utils\Parentheses;
 use WordPressCS\WordPress\Sniff;
 
@@ -20,12 +21,10 @@ use WordPressCS\WordPress\Sniff;
  *
  * Note: this sniff does not detect variable assignments in ternaries without parentheses!
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.14.0
- * @since   3.0.0  - The generic "assignment in condition" logic has been removed from the sniff
- *                   in favour of the upstream `Generic.CodeAnalysis.AssignmentInCondition` sniff.
- *                 - The sniff has been renamed from `AssignmentInCondition` to `AssignmentInTernaryCondition`.
+ * @since 0.14.0
+ * @since 3.0.0  - The generic "assignment in condition" logic has been removed from the sniff
+ *                 in favour of the upstream `Generic.CodeAnalysis.AssignmentInCondition` sniff.
+ *               - The sniff has been renamed from `AssignmentInCondition` to `AssignmentInTernaryCondition`.
  *
  * @link https://github.com/squizlabs/PHP_CodeSniffer/pull/1594 Upstream sniff.
  */
@@ -100,13 +99,13 @@ final class AssignmentInTernaryConditionSniff extends Sniff {
 			$opener = Parentheses::getLastOpener( $this->phpcsFile, $stackPtr );
 			$closer = Parentheses::getLastCloser( $this->phpcsFile, $stackPtr );
 
-			$next_statement_closer = $this->phpcsFile->findEndOfStatement( $stackPtr, array( \T_COLON, \T_CLOSE_PARENTHESIS, \T_CLOSE_SQUARE_BRACKET ) );
+			$next_statement_closer = BCFile::findEndOfStatement( $this->phpcsFile, $stackPtr, array( \T_COLON, \T_CLOSE_PARENTHESIS, \T_CLOSE_SQUARE_BRACKET ) );
 			if ( false !== $next_statement_closer && $next_statement_closer < $closer ) {
 				// Parentheses are unrelated to the ternary.
 				return;
 			}
 
-			$prev_statement_closer = $this->phpcsFile->findStartOfStatement( $stackPtr, array( \T_COLON, \T_OPEN_PARENTHESIS, \T_OPEN_SQUARE_BRACKET ) );
+			$prev_statement_closer = BCFile::findStartOfStatement( $this->phpcsFile, $stackPtr, array( \T_COLON, \T_OPEN_PARENTHESIS, \T_OPEN_SQUARE_BRACKET ) );
 			if ( false !== $prev_statement_closer && $opener < $prev_statement_closer ) {
 				// Parentheses are unrelated to the ternary.
 				return;

@@ -14,21 +14,21 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the DeprecatedParameters sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.12.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  *
- * @since   0.12.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @covers \WordPressCS\WordPress\Sniffs\WP\DeprecatedParametersSniff
  */
 final class DeprecatedParametersUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList() {
 		$start_line = 42;
-		$end_line   = 77;
+		$end_line   = 97;
 		$errors     = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
 
 		$errors[22] = 1;
@@ -39,8 +39,8 @@ final class DeprecatedParametersUnitTest extends AbstractSniffUnitTest {
 		$errors[38] = 1;
 
 		// Override number of errors.
-		$errors[47] = 2;
-		$errors[61] = 2;
+		$errors[50] = 2;
+		$errors[76] = 2;
 
 		return $errors;
 	}
@@ -48,13 +48,9 @@ final class DeprecatedParametersUnitTest extends AbstractSniffUnitTest {
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
-		$start_line = 80;
-		$end_line   = 80;
-		$errors     = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
-
-		return $errors;
+		return array();
 	}
 }

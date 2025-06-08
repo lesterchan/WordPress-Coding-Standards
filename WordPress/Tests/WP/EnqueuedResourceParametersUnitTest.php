@@ -14,16 +14,16 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the EnqueuedCheck sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 1.0.0
  *
- * @since   1.0.0
+ * @covers \WordPressCS\WordPress\Sniffs\WP\EnqueuedResourceParametersSniff
  */
 final class EnqueuedResourceParametersUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList() {
 		return array(
@@ -39,13 +39,14 @@ final class EnqueuedResourceParametersUnitTest extends AbstractSniffUnitTest {
 			61 => 1,
 			82 => 1,
 			85 => 1,
+			88 => 1,
 		);
 	}
 
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
 		return array(

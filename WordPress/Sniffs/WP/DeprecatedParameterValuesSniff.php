@@ -19,11 +19,9 @@ use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
 /**
  * Check for usage of deprecated parameter values in WP functions and provide alternative based on the parameter passed.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 1.0.0
  *
- * @since   1.0.0
- *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
+ * @uses \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 final class DeprecatedParameterValuesSniff extends AbstractFunctionParameterSniff {
 
@@ -218,7 +216,8 @@ final class DeprecatedParameterValuesSniff extends AbstractFunctionParameterSnif
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
@@ -243,8 +242,9 @@ final class DeprecatedParameterValuesSniff extends AbstractFunctionParameterSnif
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $matched_content The token content (function name) which was matched.
-	 * @param array  $parameter       Array with start and end token positon of the parameter.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
+	 * @param array  $parameter       Array with start and end token position of the parameter.
 	 * @param array  $parameter_args  Array with alternative and WordPress deprecation version of the parameter.
 	 *
 	 * @return void
@@ -288,5 +288,4 @@ final class DeprecatedParameterValuesSniff extends AbstractFunctionParameterSnif
 			$data
 		);
 	}
-
 }

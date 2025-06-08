@@ -9,8 +9,8 @@
 
 namespace WordPressCS\WordPress\Sniffs\WhiteSpace;
 
-use PHP_CodeSniffer\Standards\Squiz\Sniffs\WhiteSpace\ObjectOperatorSpacingSniff as Squiz_ObjectOperatorSpacingSniff;
 use PHP_CodeSniffer\Files\File;
+use PHP_CodeSniffer\Standards\Squiz\Sniffs\WhiteSpace\ObjectOperatorSpacingSniff as Squiz_ObjectOperatorSpacingSniff;
 use PHP_CodeSniffer\Util\Tokens;
 
 /**
@@ -19,10 +19,8 @@ use PHP_CodeSniffer\Util\Tokens;
  * Difference with the upstream sniff:
  * - When the `::` operator is used in `::class`, no new line(s) before or after the object operator are allowed.
  *
- * @package WPCS\WordPressCodingStandards
- *
  * @since 3.0.0
- * @link  https://github.com/squizlabs/PHP_CodeSniffer/blob/master/src/Standards/Squiz/Sniffs/WhiteSpace/ObjectOperatorSpacingSniff.php
+ * @link  https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/src/Standards/Squiz/Sniffs/WhiteSpace/ObjectOperatorSpacingSniff.php
  */
 final class ObjectOperatorSpacingSniff extends Squiz_ObjectOperatorSpacingSniff {
 

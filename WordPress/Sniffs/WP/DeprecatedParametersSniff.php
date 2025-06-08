@@ -24,15 +24,13 @@ use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
  * By default, it is set to presume that a project will support the current
  * WP version and up to three releases before.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.12.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.14.0 Now has the ability to handle minimum supported WP version
+ *               being provided via the command-line or as as <config> value
+ *               in a custom ruleset.
  *
- * @since   0.12.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   0.14.0 Now has the ability to handle minimum supported WP version
- *                 being provided via the command-line or as as <config> value
- *                 in a custom ruleset.
- *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
+ * @uses \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 
@@ -51,7 +49,7 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 	 * Array of function, argument, and default value for deprecated argument.
 	 *
 	 * The functions are ordered alphabetically.
-	 * Last updated for WordPress 4.8.0.
+	 * Last updated for WordPress 6.3.
 	 *
 	 * @since 0.12.0
 	 *
@@ -87,6 +85,13 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '5.9.0',
 			),
 		),
+		'_wp_post_revision_fields' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => false,
+				'version' => '4.5.0',
+			),
+		),
 		'add_option' => array(
 			3 => array(
 				'name'    => 'deprecated',
@@ -113,11 +118,25 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '0.71',
 			),
 		),
+		'delete_plugins' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '4.0.0',
+			),
+		),
 		'discover_pingback_server_uri' => array(
 			2 => array(
 				'name'    => 'deprecated',
 				'value'   => '',
 				'version' => '2.7.0',
+			),
+		),
+		'get_blog_list' => array(
+			3 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '3.0.0', // Was previously part of MU.
 			),
 		),
 		'get_category_parents' => array(
@@ -141,6 +160,20 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '3.0.0', // Was previously part of MU.
 			),
 		),
+		'get_site_option' => array(
+			3 => array(
+				'name'    => 'deprecated',
+				'value'   => true,
+				'version' => '4.4.0',
+			),
+		),
+		'get_terms' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '4.5.0',
+			),
+		),
 		'get_the_author' => array(
 			1 => array(
 				'name'    => 'deprecated',
@@ -162,6 +195,27 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '4.4.0',
 			),
 		),
+		'global_terms' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '6.1.0',
+			),
+		),
+		'iframe_header' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => false,
+				'version' => '4.2.0',
+			),
+		),
+		'install_search_form' => array(
+			1 => array(
+				'name'    => 'deprecated',
+				'value'   => true,
+				'version' => '4.6.0',
+			),
+		),
 		'is_email' => array(
 			2 => array(
 				'name'    => 'deprecated',
@@ -176,11 +230,53 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '2.7.0',
 			),
 		),
+		'newblog_notify_siteadmin' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '3.0.0',
+			),
+		),
+		'permalink_single_rss' => array(
+			1 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '2.3.0',
+			),
+		),
+		'redirect_this_site' => array(
+			1 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '3.0.0',
+			),
+		),
+		'register_meta' => array(
+			4 => array(
+				'name'    => 'deprecated',
+				'value'   => null,
+				'version' => '4.6.0',
+			),
+		),
 		'safecss_filter_attr' => array(
 			2 => array(
 				'name'    => 'deprecated',
 				'value'   => '',
 				'version' => '2.8.1',
+			),
+		),
+		'switch_to_blog' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => null,
+				'version' => '3.5.0', // Was previously part of MU.
+			),
+		),
+		'term_description' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => null,
+				'version' => '4.9.2',
 			),
 		),
 		'the_attachment_link' => array(
@@ -223,6 +319,13 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '2.5.0',
 			),
 		),
+		'unregister_setting' => array(
+			3 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '4.7.0',
+			),
+		),
 		'update_blog_option' => array(
 			4 => array(
 				'name'    => 'deprecated',
@@ -237,6 +340,13 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '3.1.0',
 			),
 		),
+		'update_posts_count' => array(
+			1 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '3.0.0',
+			),
+		),
 		'update_user_status' => array(
 			4 => array(
 				'name'    => 'deprecated',
@@ -244,11 +354,18 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'version' => '3.0.2',
 			),
 		),
-		'unregister_setting' => array(
+		'wp_count_terms' => array(
+			2 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '5.6.0',
+			),
+		),
+		'wp_create_thumbnail' => array(
 			3 => array(
 				'name'    => 'deprecated',
 				'value'   => '',
-				'version' => '4.7.0',
+				'version' => '3.5.0',
 			),
 		),
 		'wp_get_http_headers' => array(
@@ -270,6 +387,13 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 				'name'    => 'deprecated',
 				'value'   => '',
 				'version' => '2.6.0',
+			),
+		),
+		'wp_login' => array(
+			3 => array(
+				'name'    => 'deprecated',
+				'value'   => '',
+				'version' => '2.5.0',
 			),
 		),
 		'wp_new_user_notification' => array(
@@ -316,7 +440,8 @@ final class DeprecatedParametersSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void

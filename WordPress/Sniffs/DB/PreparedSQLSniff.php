@@ -12,6 +12,8 @@ namespace WordPressCS\WordPress\Sniffs\DB;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\ContextHelper;
+use WordPressCS\WordPress\Helpers\FormattingFunctionsHelper;
 use WordPressCS\WordPress\Helpers\WPDBTrait;
 use WordPressCS\WordPress\Sniff;
 
@@ -20,13 +22,11 @@ use WordPressCS\WordPress\Sniff;
  *
  * Makes sure that variables aren't directly interpolated into SQL statements.
  *
- * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#formatting-sql-statements
+ * @link https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#formatting-sql-statements
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.8.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `WP` category to the `DB` category.
+ * @since 0.8.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `WP` category to the `DB` category.
  */
 final class PreparedSQLSniff extends Sniff {
 
@@ -176,7 +176,7 @@ final class PreparedSQLSniff extends Sniff {
 
 				$bad_variables = array_filter(
 					TextStrings::getEmbeds( $this->tokens[ $this->i ]['content'] ),
-					function ( $symbol ) {
+					static function ( $symbol ) {
 						return preg_match( '`^\{?\$\{?wpdb\??->`', $symbol ) !== 1;
 					}
 				);
@@ -201,7 +201,7 @@ final class PreparedSQLSniff extends Sniff {
 					continue;
 				}
 
-				if ( $this->is_safe_casted( $this->i ) ) {
+				if ( ContextHelper::is_safe_casted( $this->phpcsFile, $this->i ) ) {
 					continue;
 				}
 			}
@@ -224,7 +224,7 @@ final class PreparedSQLSniff extends Sniff {
 						$this->i = $this->tokens[ $opening_paren ]['parenthesis_closer'];
 						continue;
 					}
-				} elseif ( isset( $this->formattingFunctions[ $this->tokens[ $this->i ]['content'] ] ) ) {
+				} elseif ( FormattingFunctionsHelper::is_formatting_function( $this->tokens[ $this->i ]['content'] ) ) {
 					continue;
 				}
 			}
@@ -239,5 +239,4 @@ final class PreparedSQLSniff extends Sniff {
 
 		return $this->end;
 	}
-
 }

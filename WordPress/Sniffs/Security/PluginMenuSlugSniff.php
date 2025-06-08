@@ -15,15 +15,13 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 /**
  * Warn about __FILE__ for page registration.
  *
- * @link    https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#using-__file__-for-page-registration
+ * @link https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#using-__file__-for-page-registration
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.3.0
- * @since   0.11.0 Refactored to extend the new WordPressCS native
- *                 `AbstractFunctionParameterSniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `VIP` category to the `Security` category.
+ * @since 0.3.0
+ * @since 0.11.0 Refactored to extend the new WordPressCS native
+ *               `AbstractFunctionParameterSniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `VIP` category to the `Security` category.
  */
 final class PluginMenuSlugSniff extends AbstractFunctionParameterSniff {
 
@@ -46,55 +44,55 @@ final class PluginMenuSlugSniff extends AbstractFunctionParameterSniff {
 	 *               array containing parameter positions to an array with the parameter
 	 *               position as the index and the parameter name as value.
 	 *
-	 * @var array<string, <int, string|array>> Key is the name of the functions being targetted.
-	 *                                         Value is an array with parameter positions as the
-	 *                                         keys and parameter names as the values
+	 * @var array<string, array<int, string|array>> Key is the name of the functions being targeted.
+	 *                                              Value is an array with parameter positions as the
+	 *                                              keys and parameter names as the values
 	 */
 	protected $target_functions = array(
+		'add_comments_page'   => array(
+			4 => 'menu_slug',
+		),
+		'add_dashboard_page'  => array(
+			4 => 'menu_slug',
+		),
+		'add_links_page'      => array(
+			4 => 'menu_slug',
+		),
+		'add_management_page' => array(
+			4 => 'menu_slug',
+		),
+		'add_media_page'      => array(
+			4 => 'menu_slug',
+		),
 		'add_menu_page'       => array(
 			4 => 'menu_slug',
 		),
 		'add_object_page'     => array(
 			4 => 'menu_slug',
 		),
-		'add_utility_page'    => array(
+		'add_options_page'    => array(
+			4 => 'menu_slug',
+		),
+		'add_pages_page'      => array(
+			4 => 'menu_slug',
+		),
+		'add_plugins_page'    => array(
+			4 => 'menu_slug',
+		),
+		'add_posts_page'      => array(
 			4 => 'menu_slug',
 		),
 		'add_submenu_page'    => array(
 			1 => 'parent_slug',
 			5 => 'menu_slug',
 		),
-		'add_dashboard_page'  => array(
-			4 => 'menu_slug',
-		),
-		'add_posts_page'      => array(
-			4 => 'menu_slug',
-		),
-		'add_media_page'      => array(
-			4 => 'menu_slug',
-		),
-		'add_links_page'      => array(
-			4 => 'menu_slug',
-		),
-		'add_pages_page'      => array(
-			4 => 'menu_slug',
-		),
-		'add_comments_page'   => array(
-			4 => 'menu_slug',
-		),
 		'add_theme_page'      => array(
-			4 => 'menu_slug',
-		),
-		'add_plugins_page'    => array(
 			4 => 'menu_slug',
 		),
 		'add_users_page'      => array(
 			4 => 'menu_slug',
 		),
-		'add_management_page' => array(
-			4 => 'menu_slug',
-		),
-		'add_options_page'    => array(
+		'add_utility_page'    => array(
 			4 => 'menu_slug',
 		),
 	);
@@ -106,7 +104,8 @@ final class PluginMenuSlugSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
@@ -124,5 +123,4 @@ final class PluginMenuSlugSniff extends AbstractFunctionParameterSniff {
 			}
 		}
 	}
-
 }

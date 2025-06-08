@@ -23,8 +23,6 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *
  * @link https://developer.wordpress.org/reference/functions/register_post_type/
  *
- * @package WPCS\WordPressCodingStandards
- *
  * @since 2.2.0
  */
 final class ValidPostTypeSlugSniff extends AbstractFunctionParameterSniff {
@@ -54,7 +52,7 @@ final class ValidPostTypeSlugSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 2.2.0
 	 *
-	 * @var array List of function names as keys. Value irrelevant.
+	 * @var array<string, true> Key is function name, value irrelevant.
 	 */
 	protected $target_functions = array(
 		'register_post_type' => true,
@@ -63,25 +61,35 @@ final class ValidPostTypeSlugSniff extends AbstractFunctionParameterSniff {
 	/**
 	 * Array of reserved post type names which can not be used by themes and plugins.
 	 *
+	 * Source: {@link https://developer.wordpress.org/reference/functions/register_post_type/#reserved-post-types}
+	 *
+	 * {@internal To be updated after every major release. Last updated for WordPress 6.5-RC3.}
+	 *
 	 * @since 2.2.0
 	 *
-	 * @var array
+	 * @var array<string, true> Key is reserved post type name, value irrelevant.
 	 */
 	protected $reserved_names = array(
-		'post'                => true,
-		'page'                => true,
+		'action'              => true, // Not a WP post type, but prevents other problems.
 		'attachment'          => true,
-		'revision'            => true,
-		'nav_menu_item'       => true,
+		'author'              => true, // Not a WP post type, but prevents other problems.
 		'custom_css'          => true,
 		'customize_changeset' => true,
+		'nav_menu_item'       => true,
 		'oembed_cache'        => true,
+		'order'               => true, // Not a WP post type, but prevents other problems.
+		'page'                => true,
+		'post'                => true,
+		'revision'            => true,
+		'theme'               => true, // Not a WP post type, but prevents other problems.
 		'user_request'        => true,
 		'wp_block'            => true,
-		'action'              => true,
-		'author'              => true,
-		'order'               => true,
-		'theme'               => true,
+		'wp_font_face'        => true,
+		'wp_font_family'      => true,
+		'wp_global_styles'    => true,
+		'wp_navigation'       => true,
+		'wp_template'         => true,
+		'wp_template_part'    => true,
 	);
 
 	/**
@@ -91,7 +99,7 @@ final class ValidPostTypeSlugSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 2.2.0
 	 *
-	 * @var string
+	 * @var array<int|string, int|string>
 	 */
 	private $valid_tokens = array();
 
@@ -116,8 +124,9 @@ final class ValidPostTypeSlugSniff extends AbstractFunctionParameterSniff {
 	 * @since 2.2.0
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
-	 * @param array  $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $group_name      The name of the group which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void

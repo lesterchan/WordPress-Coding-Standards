@@ -22,15 +22,13 @@ use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
  * By default, it is set to presume that a project will support the current
  * WP version and up to three releases before.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.12.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.14.0 Now has the ability to handle minimum supported WP version
+ *               being provided via the command-line or as as <config> value
+ *               in a custom ruleset.
  *
- * @since   0.12.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   0.14.0 Now has the ability to handle minimum supported WP version
- *                 being provided via the command-line or as as <config> value
- *                 in a custom ruleset.
- *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
+ * @uses \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 
@@ -43,6 +41,8 @@ final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 	 *
 	 * Version numbers should be fully qualified.
 	 *
+	 * {@internal To be updated after every major release. Last updated for WordPress 6.5-RC3.}
+	 *
 	 * @var array
 	 */
 	private $deprecated_classes = array(
@@ -53,8 +53,14 @@ final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 			'version' => '3.1.0',
 		),
 
+		// WP 3.7.0.
+		'WP_HTTP_Fsockopen' => array(
+			'alt'     => 'WP_HTTP::request()',
+			'version' => '3.7.0',
+		),
+
 		// WP 4.9.0.
-		'Customize_New_Menu_Section' => array(
+		'WP_Customize_New_Menu_Section' => array(
 			'version' => '4.9.0',
 		),
 		'WP_Customize_New_Menu_Control' => array(
@@ -62,12 +68,33 @@ final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 		),
 
 		// WP 5.3.0.
+		'WP_Privacy_Data_Export_Requests_Table' => array(
+			'alt'     => 'WP_Privacy_Data_Export_Requests_List_Table',
+			'version' => '5.3.0',
+		),
+		'WP_Privacy_Data_Removal_Requests_Table' => array(
+			'alt'     => 'WP_Privacy_Data_Removal_Requests_List_Table',
+			'version' => '5.3.0',
+		),
 		'Services_JSON' => array(
 			'alt'     => 'The PHP native JSON extension',
 			'version' => '5.3.0',
 		),
-	);
+		'Services_JSON_Error' => array(
+			'alt'     => 'The PHP native JSON extension',
+			'version' => '5.3.0',
+		),
 
+		// WP 6.4.0.
+		'WP_Http_Curl' => array(
+			'alt'     => 'WP_Http',
+			'version' => '6.4.0',
+		),
+		'WP_Http_Streams' => array(
+			'alt'     => 'WP_Http',
+			'version' => '6.4.0',
+		),
+	);
 
 	/**
 	 * Groups of classes to restrict.
@@ -91,7 +118,8 @@ final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched. Will
 	 *                                always be 'deprecated_classes'.
-	 * @param string $matched_content The token content (class name) which was matched.
+	 * @param string $matched_content The token content (class name) which was matched
+	 *                                in its original case.
 	 *
 	 * @return void
 	 */
@@ -121,5 +149,4 @@ final class DeprecatedClassesSniff extends AbstractClassRestrictionsSniff {
 			$data
 		);
 	}
-
 }

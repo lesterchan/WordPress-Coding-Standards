@@ -15,9 +15,7 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 /**
  * Flag calling preg_quote() without the second ($delimiter) parameter.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   1.0.0
+ * @since 1.0.0
  */
 final class PregQuoteDelimiterSniff extends AbstractFunctionParameterSniff {
 
@@ -37,7 +35,7 @@ final class PregQuoteDelimiterSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @var array <string function_name> => <bool>
+	 * @var array<string, true> Key is function name, value irrelevant.
 	 */
 	protected $target_functions = array(
 		'preg_quote' => true,
@@ -50,7 +48,8 @@ final class PregQuoteDelimiterSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void

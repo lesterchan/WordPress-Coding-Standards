@@ -22,15 +22,13 @@ use WordPressCS\WordPress\Helpers\MinimumWPVersionTrait;
  * By default, it is set to presume that a project will support the current
  * WP version and up to three releases before.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.11.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.14.0 Now has the ability to handle minimum supported WP version
+ *               being provided via the command-line or as as <config> value
+ *               in a custom ruleset.
  *
- * @since   0.11.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   0.14.0 Now has the ability to handle minimum supported WP version
- *                 being provided via the command-line or as as <config> value
- *                 in a custom ruleset.
- *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
+ * @uses \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 final class DeprecatedFunctionsSniff extends AbstractFunctionRestrictionsSniff {
 
@@ -39,19 +37,17 @@ final class DeprecatedFunctionsSniff extends AbstractFunctionRestrictionsSniff {
 	/**
 	 * List of deprecated functions with alternative when available.
 	 *
-	 * To be updated after every major release.
-	 * Last updated for WordPress 4.8.
-	 *
 	 * Version numbers should be fully qualified.
 	 * Replacement functions should have parentheses.
 	 *
 	 * To retrieve a function list for comparison, the following tool is available:
 	 * https://github.com/JDGrimes/wp-deprecated-code-scanner
 	 *
+	 * {@internal To be updated after every major release. Last updated for WordPress 6.5-RC3.}
+	 *
 	 * @var array
 	 */
 	private $deprecated_functions = array(
-
 		// WP 0.71.
 		'the_category_head' => array(
 			'alt'     => 'get_the_category_by_ID()',
@@ -1496,6 +1492,166 @@ final class DeprecatedFunctionsSniff extends AbstractFunctionRestrictionsSniff {
 			'alt'     => 'wp_style_engine_get_styles()',
 			'version' => '6.1.0',
 		),
+
+		// WP 6.2.0.
+		'_resolve_home_block_template' => array(
+			'alt'     => '',
+			'version' => '6.2.0',
+		),
+		'get_page_by_title' => array(
+			'alt'     => 'WP_Query',
+			'version' => '6.2.0',
+		),
+
+		// WP 6.3.0.
+		'_wp_tinycolor_bound_alpha' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_get_classic_menu_fallback' => array(
+			'alt'     => 'WP_Navigation_Fallback::get_classic_menu_fallback',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_get_classic_menu_fallback_blocks' => array(
+			'alt'     => 'WP_Navigation_Fallback::get_classic_menu_fallback_blocks',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_get_most_recently_published_navigation' => array(
+			'alt'     => 'WP_Navigation_Fallback::get_most_recently_published_navigation',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_maybe_use_classic_menu_fallback' => array(
+			'alt'     => 'WP_Navigation_Fallback::create_classic_menu_fallback',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_parse_blocks_from_menu_items' => array(
+			'alt'     => 'WP_Navigation_Fallback::parse_blocks_from_menu_items',
+			'version' => '6.3.0',
+		),
+		'block_core_navigation_submenu_build_css_colors' => array(
+			'alt'     => 'wp_apply_colors_support()',
+			'version' => '6.3.0',
+		),
+		'wlwmanifest_link' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_get_duotone_filter_id' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_get_duotone_filter_property' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_get_duotone_filter_svg' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_get_global_styles_svg_filters' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_get_loading_attr_default' => array(
+			'alt'     => 'wp_get_loading_optimization_attributes()',
+			'version' => '6.3.0',
+		),
+		'wp_global_styles_render_svg_filters' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_img_tag_add_loading_attr' => array(
+			'alt'     => 'wp_img_tag_add_loading_optimization_attrs()',
+			'version' => '6.3.0',
+		),
+		'wp_queue_comments_for_comment_meta_lazyload' => array(
+			'alt'     => 'wp_lazyload_comment_meta()',
+			'version' => '6.3.0',
+		),
+		'wp_register_duotone_support' => array(
+			'alt'     => 'WP_Duotone::register_duotone_support()',
+			'version' => '6.3.0',
+		),
+		'wp_render_duotone_support' => array(
+			'alt'     => 'WP_Duotone::render_duotone_support()',
+			'version' => '6.3.0',
+		),
+		'wp_tinycolor_bound01' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_tinycolor_hsl_to_rgb' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_tinycolor_hue_to_rgb' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_tinycolor_rgb_to_rgb' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+		'wp_tinycolor_string_to_rgb' => array(
+			'alt'     => '',
+			'version' => '6.3.0',
+		),
+
+		// WP 6.4.0.
+		'_admin_bar_bump_cb' => array(
+			'alt'     => 'wp_enqueue_admin_bar_bump_styles()',
+			'version' => '6.4.0',
+		),
+		'_inject_theme_attribute_in_block_template_content' => array(
+			'alt'     => 'traverse_and_serialize_blocks( parse_blocks( $template_content ), \'_inject_theme_attribute_in_template_part_block\' )',
+			'version' => '6.4.0',
+		),
+		'_remove_theme_attribute_in_block_template_content' => array(
+			'alt'     => 'traverse_and_serialize_blocks( parse_blocks( $template_content ), \'_remove_theme_attribute_from_template_part_block\' )',
+			'version' => '6.4.0',
+		),
+		'_wp_theme_json_webfonts_handler' => array(
+			'alt'     => 'wp_print_font_faces()',
+			'version' => '6.4.0',
+		),
+		'print_embed_styles' => array(
+			'alt'     => 'wp_enqueue_embed_styles()',
+			'version' => '6.4.0',
+		),
+		'print_emoji_styles' => array(
+			'alt'     => 'wp_enqueue_emoji_styles()',
+			'version' => '6.4.0',
+		),
+		'the_block_template_skip_link' => array(
+			'alt'     => 'wp_enqueue_block_template_skip_link()',
+			'version' => '6.4.0',
+		),
+		'wp_admin_bar_header' => array(
+			'alt'     => 'wp_enqueue_admin_bar_header_styles()',
+			'version' => '6.4.0',
+		),
+		'wp_img_tag_add_decoding_attr' => array(
+			'alt'     => 'wp_img_tag_add_loading_optimization_attrs()',
+			'version' => '6.4.0',
+		),
+		'wp_update_https_detection_errors' => array(
+			'alt'     => 'wp_get_https_detection_errors()',
+			'version' => '6.4.0',
+		),
+
+		// WP 6.5.0.
+		'block_core_file_ensure_interactivity_dependency' => array(
+			'alt'     => 'wp_register_script_module()',
+			'version' => '6.5.0',
+		),
+		'block_core_image_ensure_interactivity_dependency' => array(
+			'alt'     => 'wp_register_script_module()',
+			'version' => '6.5.0',
+		),
+		'block_core_query_ensure_interactivity_dependency' => array(
+			'alt'     => 'wp_register_script_module()',
+			'version' => '6.5.0',
+		),
 	);
 
 	/**
@@ -1520,7 +1676,8 @@ final class DeprecatedFunctionsSniff extends AbstractFunctionRestrictionsSniff {
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched. Will
 	 *                                always be 'deprecated_functions'.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 *
 	 * @return void
 	 */
@@ -1528,27 +1685,24 @@ final class DeprecatedFunctionsSniff extends AbstractFunctionRestrictionsSniff {
 
 		$this->set_minimum_wp_version();
 
-		$function_name = strtolower( $matched_content );
-
 		$message = '%s() has been deprecated since WordPress version %s.';
 		$data    = array(
-			$matched_content,
-			$this->deprecated_functions[ $function_name ]['version'],
+			$this->tokens[ $stackPtr ]['content'],
+			$this->deprecated_functions[ $matched_content ]['version'],
 		);
 
-		if ( ! empty( $this->deprecated_functions[ $function_name ]['alt'] ) ) {
+		if ( ! empty( $this->deprecated_functions[ $matched_content ]['alt'] ) ) {
 			$message .= ' Use %s instead.';
-			$data[]   = $this->deprecated_functions[ $function_name ]['alt'];
+			$data[]   = $this->deprecated_functions[ $matched_content ]['alt'];
 		}
 
 		MessageHelper::addMessage(
 			$this->phpcsFile,
 			$message,
 			$stackPtr,
-			( $this->wp_version_compare( $this->deprecated_functions[ $function_name ]['version'], $this->minimum_wp_version, '<' ) ),
+			( $this->wp_version_compare( $this->deprecated_functions[ $matched_content ]['version'], $this->minimum_wp_version, '<' ) ),
 			MessageHelper::stringToErrorcode( $matched_content . 'Found' ),
 			$data
 		);
 	}
-
 }

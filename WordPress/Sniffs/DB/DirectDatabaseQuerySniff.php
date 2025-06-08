@@ -19,16 +19,14 @@ use WordPressCS\WordPress\Sniff;
 /**
  * Flag Database direct queries.
  *
- * @link    https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#direct-database-queries
+ * @link https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#direct-database-queries
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.3.0
- * @since   0.6.0  Removed the add_unique_message() function as it is no longer needed.
- * @since   0.11.0 This class now extends the WordPressCS native `Sniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `VIP` category to the `DB` category.
- * @since   3.0.0  Support for the very sniff specific WPCS native ignore comment syntax has been removed.
+ * @since 0.3.0
+ * @since 0.6.0  Removed the add_unique_message() function as it is no longer needed.
+ * @since 0.11.0 This class now extends the WordPressCS native `Sniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `VIP` category to the `DB` category.
+ * @since 3.0.0  Support for the very sniff specific WPCS native ignore comment syntax has been removed.
  */
 final class DirectDatabaseQuerySniff extends Sniff {
 
@@ -37,7 +35,7 @@ final class DirectDatabaseQuerySniff extends Sniff {
 	 *
 	 * @since 0.6.0
 	 *
-	 * @var string|string[]
+	 * @var string[]
 	 */
 	public $customCacheGetFunctions = array();
 
@@ -46,7 +44,7 @@ final class DirectDatabaseQuerySniff extends Sniff {
 	 *
 	 * @since 0.6.0
 	 *
-	 * @var string|string[]
+	 * @var string[]
 	 */
 	public $customCacheSetFunctions = array();
 
@@ -55,7 +53,7 @@ final class DirectDatabaseQuerySniff extends Sniff {
 	 *
 	 * @since 0.6.0
 	 *
-	 * @var string|string[]
+	 * @var string[]
 	 */
 	public $customCacheDeleteFunctions = array();
 
@@ -185,7 +183,7 @@ final class DirectDatabaseQuerySniff extends Sniff {
 		}
 
 		$methodPtr = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $is_object_call + 1 ), null, true );
-		$method    = $this->tokens[ $methodPtr ]['content'];
+		$method    = strtolower( $this->tokens[ $methodPtr ]['content'] );
 
 		$this->mergeFunctionLists();
 
@@ -194,6 +192,9 @@ final class DirectDatabaseQuerySniff extends Sniff {
 		}
 
 		$endOfStatement = $this->phpcsFile->findNext( array( \T_SEMICOLON, \T_CLOSE_TAG ), ( $stackPtr + 1 ) );
+		if ( false === $endOfStatement ) {
+			return;
+		}
 
 		// Check for Database Schema Changes/ table truncation.
 		for ( $_pos = ( $stackPtr + 1 ); $_pos < $endOfStatement; $_pos++ ) {
@@ -202,7 +203,7 @@ final class DirectDatabaseQuerySniff extends Sniff {
 				break;
 			}
 
-			if ( strpos( TextStrings::stripQuotes( $this->tokens[ $_pos ]['content'] ), 'TRUNCATE ' ) === 0 ) {
+			if ( strpos( strtoupper( TextStrings::stripQuotes( $this->tokens[ $_pos ]['content'] ) ), 'TRUNCATE ' ) === 0 ) {
 				// Ignore queries to truncate the database as caching those is irrelevant and they need a direct db query.
 				return;
 			}
@@ -297,5 +298,4 @@ final class DirectDatabaseQuerySniff extends Sniff {
 			$this->addedCustomFunctions['cachedelete'] = $this->customCacheDeleteFunctions;
 		}
 	}
-
 }

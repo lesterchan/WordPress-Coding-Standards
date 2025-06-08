@@ -9,20 +9,18 @@
 
 namespace WordPressCS\WordPress\Sniffs\PHP;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Tokens\Collections;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Enforces Yoda conditional statements.
  *
- * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#yoda-conditions
+ * @link https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#yoda-conditions
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.3.0
- * @since   0.12.0 This class now extends the WordPressCS native `Sniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.3.0
+ * @since 0.12.0 This class now extends the WordPressCS native `Sniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  */
 final class YodaConditionsSniff extends Sniff {
 
@@ -123,5 +121,4 @@ final class YodaConditionsSniff extends Sniff {
 
 		$this->phpcsFile->addError( 'Use Yoda Condition checks, you must.', $stackPtr, 'NotYoda' );
 	}
-
 }

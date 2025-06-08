@@ -14,9 +14,8 @@ use PHPCSUtils\Utils\PassedParameters;
 /**
  * Helper utilities for recognizing functions related to the WP Hook mechanism.
  *
- * @package WPCS\WordPressCodingStandards
- * @since   3.0.0 The property in this class was previously contained in the
- *                `WordPressCS\WordPress\Sniff` class and has been moved here.
+ * @since 3.0.0 The property in this class was previously contained in the
+ *              `WordPressCS\WordPress\Sniff` class and has been moved here.
  */
 final class WPHookHelper {
 
@@ -27,12 +26,12 @@ final class WPHookHelper {
 	 * @since 0.11.0 Changed from public static to protected non-static.
 	 * @since 3.0.0  - Moved from the Sniff class to this class.
 	 *               - The property visibility has changed from `protected` to `private static`.
-	 *                 Use the `get_function_names()` method for access.
+	 *                 Use the `get_functions()` method for access.
 	 *               - The format of the value has changed from a non-relevant boolean to
 	 *                 an array with the parameter position and name(s) for the hook name parameter.
 	 *
-	 * @var array<string, <string, int|string|array>> Function name as key, array with target
-	 *                                                parameter position and name(s) as value.
+	 * @var array<string, array<string, int|string|string[]>> Function name as key, array with target
+	 *                                                        parameter position and name(s) as value.
 	 */
 	private static $hookInvokeFunctions = array(
 		'do_action' => array(

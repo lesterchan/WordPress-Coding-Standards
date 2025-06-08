@@ -22,19 +22,18 @@ use PHPCSUtils\BackCompat\Helper;
  * - After that, the `MinimumWPVersionTrait::$minimum_wp_version` property can be freely used
  *   in the sniff.
  *
- * @package WPCS\WordPressCodingStandards
- * @since   3.0.0 The property and method in this trait were previously contained in the
- *                `WordPressCS\WordPress\Sniff` class and have been moved here.
+ * @since 3.0.0 The property and method in this trait were previously contained in the
+ *              `WordPressCS\WordPress\Sniff` class and have been moved here.
  */
 trait MinimumWPVersionTrait {
 
 	/**
 	 * Minimum supported WordPress version.
 	 *
-	 * Currently used by the `WordPress.WP.AlternativeFunctions`,
-	 * `WordPress.WP.Capabilities`, `WordPress.WP.DeprecatedClasses`,
-	 * `WordPress.WP.DeprecatedFunctions`, `WordPress.WP.DeprecatedParameter`
-	 * and the `WordPress.WP.DeprecatedParameterValues` sniff.
+	 * Currently used by the `WordPress.Security.PreparedSQLPlaceholders`,
+	 * `WordPress.WP.AlternativeFunctions`, `WordPress.WP.Capabilities`,
+	 * `WordPress.WP.DeprecatedClasses`, `WordPress.WP.DeprecatedFunctions`,
+	 * `WordPress.WP.DeprecatedParameter` and the `WordPress.WP.DeprecatedParameterValues` sniff.
 	 *
 	 * These sniffs will adapt their behaviour based on the minimum supported WP version
 	 * indicated.
@@ -63,9 +62,6 @@ trait MinimumWPVersionTrait {
 	 *               - The property has been renamed from `$minimum_supported_version` to `$minimum_wp_version`.
 	 *               - The CLI option has been renamed from `minimum_supported_wp_version` to `minimum_wp_version`.
 	 *
-	 * @internal When the value of this property is changed, it will also need
-	 *           to be changed in the `WP/AlternativeFunctionsUnitTest.inc` file.
-	 *
 	 * @var string WordPress version.
 	 */
 	public $minimum_wp_version;
@@ -83,7 +79,7 @@ trait MinimumWPVersionTrait {
 	 *
 	 * @var string WordPress version.
 	 */
-	private $default_minimum_wp_version = '5.8';
+	private $default_minimum_wp_version = '6.2';
 
 	/**
 	 * Overrule the minimum supported WordPress version with a command-line/config value.
@@ -96,8 +92,10 @@ trait MinimumWPVersionTrait {
 	 * @since 0.14.0
 	 * @since 3.0.0  - Moved from the Sniff class to this dedicated Trait.
 	 *               - Renamed from `get_wp_version_from_cl()` to `set_minimum_wp_version()`.
+	 *
+	 * @return void
 	 */
-	protected function set_minimum_wp_version() {
+	final protected function set_minimum_wp_version() {
 		$minimum_wp_version = '';
 
 		// Use a ruleset provided value if available.
@@ -130,7 +128,7 @@ trait MinimumWPVersionTrait {
 	 *
 	 * @return bool
 	 */
-	protected function wp_version_compare( $version1, $version2, $operator ) {
+	final protected function wp_version_compare( $version1, $version2, $operator ) {
 		$version1 = $this->normalize_version_number( $version1 );
 		$version2 = $this->normalize_version_number( $version2 );
 
@@ -143,7 +141,7 @@ trait MinimumWPVersionTrait {
 	 * Ensures that a version number is comparable via the PHP version_compare() function
 	 * by making sure it complies with the minimum "PHP-standardized" version number requirements.
 	 *
-	 * Presumes the input is a numeric version number string. The behaviour with other input is undetermined.
+	 * Presumes the input is a numeric version number string. The behaviour with other input is undefined.
 	 *
 	 * @since 3.0.0
 	 *

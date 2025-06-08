@@ -9,6 +9,7 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
+use PHP_CodeSniffer\Exceptions\RuntimeException;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\TextStrings;
@@ -17,15 +18,11 @@ use WordPressCS\WordPress\Sniff;
 /**
  * Makes sure scripts and styles are enqueued and not explicitly echo'd.
  *
- * @link    https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#inline-resources
+ * @link https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#inline-resources
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.3.0
- * @since   0.12.0 This class now extends the WordPressCS native `Sniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   3.0.0  Added a check for a complete text string in the case where it
- *                 spans two lines.
+ * @since 0.3.0
+ * @since 0.12.0 This class now extends the WordPressCS native `Sniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  */
 final class EnqueuedResourcesSniff extends Sniff {
 
@@ -46,15 +43,21 @@ final class EnqueuedResourcesSniff extends Sniff {
 	 *
 	 * @param int $stackPtr The position of the current token in the stack.
 	 *
-	 * @return int Integer stack pointer to skip forward to.
+	 * @return int|void Integer stack pointer to skip forward or void to continue
+	 *                  normal file processing.
 	 */
 	public function process_token( $stackPtr ) {
 
 		$end_ptr = $stackPtr;
 		$content = $this->tokens[ $stackPtr ]['content'];
 		if ( \T_INLINE_HTML !== $this->tokens[ $stackPtr ]['code'] ) {
-			$end_ptr = TextStrings::getEndOfCompleteTextString( $this->phpcsFile, $stackPtr );
-			$content = TextStrings::getCompleteTextString( $this->phpcsFile, $stackPtr );
+			try {
+				$end_ptr = TextStrings::getEndOfCompleteTextString( $this->phpcsFile, $stackPtr );
+				$content = TextStrings::getCompleteTextString( $this->phpcsFile, $stackPtr );
+			} catch ( RuntimeException $e ) {
+				// Parse error/live coding.
+				return;
+			}
 		}
 
 		if ( preg_match_all( '# rel=\\\\?[\'"]?stylesheet\\\\?[\'"]?#', $content, $matches, \PREG_OFFSET_CAPTURE ) > 0 ) {

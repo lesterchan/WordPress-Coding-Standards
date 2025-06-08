@@ -14,10 +14,10 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the EnqueuedResources sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.3.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  *
- * @since   0.3.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @covers \WordPressCS\WordPress\Sniffs\WP\EnqueuedResourcesSniff
  */
 final class EnqueuedResourcesUnitTest extends AbstractSniffUnitTest {
 
@@ -26,7 +26,7 @@ final class EnqueuedResourcesUnitTest extends AbstractSniffUnitTest {
 	 *
 	 * @param string $testFile The name of the file being tested.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList( $testFile = '' ) {
 		switch ( $testFile ) {
@@ -79,7 +79,7 @@ final class EnqueuedResourcesUnitTest extends AbstractSniffUnitTest {
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
 		return array();

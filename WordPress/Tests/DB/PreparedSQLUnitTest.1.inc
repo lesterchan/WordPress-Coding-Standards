@@ -79,7 +79,7 @@ $all_post_meta = $wpdb->get_results( $wpdb->prepare( sprintf( <<<'ND'
 		AND `post_id` IN (%s)
 ND
 	, $wpdb->postmeta,
-	implode( ',', array_fill( 0, count( $post_ids ), '%d' ) )
+	IMPLODE( ',', array_fill( 0, count( $post_ids ), '%d' ) )
 ), $post_ids ) ); // OK.
 
 wpdb::prepare( "SELECT * FROM $wpdb?->posts WHERE post_title LIKE '" . foo() . "';" ); // Bad.
@@ -134,6 +134,14 @@ $wpdb->query( $wpdb->prepare( 'SELECT * FROM ' . $notwpdb?->posts . " WHERE post
 // Safeguard handling of PHP 7.4+ numeric literals with undersocres and PHP 8.1 explicit octals.
 $wpdb->query( "SELECT * FROM $wpdb->posts WHERE value = " . 10_000 . ";" ); // OK.
 $wpdb->query( "SELECT * FROM $wpdb->posts WHERE value = " . 0o34 . ";" ); // OK.
+
+// Not a method call.
+$wpdb = new WPDB();
+$foo = $wpdb->propertyAccess;
+echo $wpdb::CONSTANT_NAME;
+
+// Not an identifiable method call.
+$wpdb->{$methodName}('query');
 
 // Don't throw an error during live coding.
 wpdb::prepare( "SELECT * FROM $wpdb->posts

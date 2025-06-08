@@ -22,9 +22,7 @@ use WordPressCS\WordPress\Sniff;
  * of functions, as no amount of error checking can prevent
  * PHP from throwing errors when those functions are used.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   1.1.0
+ * @since 1.1.0
  */
 final class NoSilencedErrorsSniff extends Sniff {
 
@@ -62,7 +60,7 @@ final class NoSilencedErrorsSniff extends Sniff {
 	 * @since 1.1.0
 	 * @since 3.0.0 Renamed from `$custom_whitelist` to `$customAllowedFunctionsList`.
 	 *
-	 * @var array
+	 * @var string[]
 	 */
 	public $customAllowedFunctionsList = array();
 
@@ -83,7 +81,7 @@ final class NoSilencedErrorsSniff extends Sniff {
 	 * @since 1.1.0
 	 * @since 3.0.0 Renamed from `$function_whitelist` to `$allowedFunctionsList`.
 	 *
-	 * @var array <string function name> => <bool true>
+	 * @var array<string, true> Key is function name, value irrelevant.
 	 */
 	protected $allowedFunctionsList = array(
 		// Directory extension.
@@ -156,7 +154,7 @@ final class NoSilencedErrorsSniff extends Sniff {
 	 *
 	 * @since 1.1.0
 	 *
-	 * @var array
+	 * @var array<int|string, int|string>
 	 */
 	private $empty_tokens = array();
 

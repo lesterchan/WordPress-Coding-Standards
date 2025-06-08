@@ -21,8 +21,6 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * - Throws errors for ini directives listed in the disallow-list.
  * - A warning will be thrown in all other cases.
  *
- * @package WPCS\WordPressCodingStandards
- *
  * @since 2.1.0
  */
 final class IniSetSniff extends AbstractFunctionParameterSniff {
@@ -137,7 +135,8 @@ final class IniSetSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void

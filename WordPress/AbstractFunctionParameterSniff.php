@@ -9,15 +9,14 @@
 
 namespace WordPressCS\WordPress;
 
+use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\PassedParameters;
 use WordPressCS\WordPress\AbstractFunctionRestrictionsSniff;
 
 /**
  * Advises about parameters used in function calls.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.11.0
+ * @since 0.11.0
  */
 abstract class AbstractFunctionParameterSniff extends AbstractFunctionRestrictionsSniff {
 
@@ -62,7 +61,8 @@ abstract class AbstractFunctionParameterSniff extends AbstractFunctionRestrictio
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 *
 	 * @return int|void Integer stack pointer to skip forward or void to continue
 	 *                  normal file processing.
@@ -79,13 +79,52 @@ abstract class AbstractFunctionParameterSniff extends AbstractFunctionRestrictio
 	}
 
 	/**
+	 * Verify if the current token is a function call. Behaves like the parent method, except that
+	 * it returns false if there is no opening parenthesis after the function name (likely a
+	 * function import) or if it is a first class callable.
+	 *
+	 * @param int $stackPtr The position of the current token in the stack.
+	 *
+	 * @return bool
+	 */
+	public function is_targetted_token( $stackPtr ) {
+		if ( ! parent::is_targetted_token( $stackPtr ) ) {
+			return false;
+		}
+
+		$next = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $stackPtr + 1 ), null, true );
+
+		if ( \T_OPEN_PARENTHESIS !== $this->tokens[ $next ]['code'] ) {
+			// Not a function call (likely a function import).
+			return false;
+		}
+
+		if ( isset( $this->tokens[ $next ]['parenthesis_closer'] ) === false ) {
+			// Syntax error or live coding: missing closing parenthesis.
+			return false;
+		}
+
+		// First class callable.
+		$firstNonEmpty = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $next + 1 ), null, true );
+		if ( \T_ELLIPSIS === $this->tokens[ $firstNonEmpty ]['code'] ) {
+			$secondNonEmpty = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $firstNonEmpty + 1 ), null, true );
+			if ( \T_CLOSE_PARENTHESIS === $this->tokens[ $secondNonEmpty ]['code'] ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Process the parameters of a matched function.
 	 *
 	 * This method has to be made concrete in child classes.
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return int|void Integer stack pointer to skip forward or void to continue
@@ -101,7 +140,8 @@ abstract class AbstractFunctionParameterSniff extends AbstractFunctionRestrictio
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 *
 	 * @return int|void Integer stack pointer to skip forward or void to continue
 	 *                  normal file processing.

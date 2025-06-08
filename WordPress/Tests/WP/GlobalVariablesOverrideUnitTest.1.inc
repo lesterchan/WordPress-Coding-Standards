@@ -55,7 +55,7 @@ add_filter( 'comments_open', function( $open, $post_id ) {
 	return 'page' === $page->post_type;
 }, 10, 2 );
 
-$closure = function() { $page = 'test' }; // Ok, check against cross-contaminiation from within a closure.
+$closure = function() { $page = 'test'; }; // Ok, check against cross-contaminiation from within a closure.
 
 // Allow overriding globals in functions within unit test classes.
 // https://github.com/WordPress/WordPress-Coding-Standards/issues/300#issuecomment-158778606
@@ -183,20 +183,20 @@ function global_vars() {
 	return $closure( $pagenow ); // OK, not an assignment.
 }
 
-// Verify skipping over rest of the function when live coding/parse error in nested scope structure.
-function global_vars() {
-	global $pagenow;
 
-	$closure = function ( $pagenow ) {
-		global $feeds;
 
-		$nested_closure_with_parse_error = function ( $feeds )
 
-		$feeds = 'something'; // Bad, but ignored because of the parse error in the closure.
-	};
 
-	$pagenow = 'something'; // Bad, should be picked up. Tests that skipping on parse error doesn't skip too far.
-}
+
+
+
+
+
+
+
+
+
+
 
 $GLOBALS[] = 'something';
 $GLOBALS[103] = 'something';
@@ -294,3 +294,23 @@ enum Suit: string implements Colorful {
 		[$mode] = $array; // Bad, global variable in function scope.
 	}
 }
+
+/*
+ * Safeguard against false positives in combination with PHP 7.1 keyed lists which can have bloody anything as keys... *sigh*
+ * The below are all Okay: not assignment to a WP global var, but use of the WP global var in a key or as the array key for an assignment.
+ * Includes test with PHP 7.3 reference assignments.
+ */
+list(
+	$map->getKey($type, $urls) => $not_a_wp_global,
+	array( $tab, $tabs ) => &$not_a_wp_global['key'][$tab],
+	get($year, $day) => $not_a_wp_global[$year]
+) = $array;
+[
+	$map->getKey($type, $urls) => $not_a_wp_global['key'][$tab],
+	array( $tab, $tabs ) => $not_a_wp_global,
+	get($year, $day) => &$not_a_wp_global[$year]
+] = $array;
+
+// Live coding/parse error.
+// This has to be the last test in the file!
+list( $tab, $tabs

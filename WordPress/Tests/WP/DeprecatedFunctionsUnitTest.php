@@ -14,21 +14,21 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the WP_DeprecatedFunctions sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.11.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  *
- * @since   0.11.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @covers \WordPressCS\WordPress\Sniffs\WP\DeprecatedFunctionsSniff
  */
 final class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList() {
 		$start_line = 8;
-		$end_line   = 356;
+		$end_line   = 382;
 		$errors     = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
 
 		// Unset the lines related to version comments.
@@ -70,7 +70,14 @@ final class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
 			$errors[340],
 			$errors[344],
 			$errors[346],
-			$errors[353]
+			$errors[353],
+			$errors[357],
+			$errors[359],
+			$errors[361],
+			$errors[363],
+			$errors[369],
+			$errors[371],
+			$errors[373]
 		);
 
 		return $errors;
@@ -79,29 +86,20 @@ final class DeprecatedFunctionsUnitTest extends AbstractSniffUnitTest {
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
-		$start_line = 362;
-		$end_line   = 386;
+		$start_line = 388;
+		$end_line   = 428;
 		$warnings   = array_fill( $start_line, ( ( $end_line - $start_line ) + 1 ), 1 );
 
 		// Unset the lines related to version comments.
 		unset(
-			$warnings[363],
-			$warnings[365],
-			$warnings[367],
-			$warnings[373],
-			$warnings[375],
-			$warnings[377]
+			$warnings[390],
+			$warnings[414],
+			$warnings[425]
 		);
-
-		// Temporarily until PHPCS supports PHP 8.2.
-		if ( \PHP_VERSION_ID >= 80200 ) {
-			unset( $warnings[364] ); // Function call to readonly.
-		}
 
 		return $warnings;
 	}
-
 }

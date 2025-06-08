@@ -9,7 +9,6 @@
 
 namespace WordPressCS\WordPress\Sniffs\WP;
 
-use WordPressCS\WordPress\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\Arrays;
@@ -17,20 +16,20 @@ use PHPCSUtils\Utils\FunctionDeclarations;
 use PHPCSUtils\Utils\Numbers;
 use PHPCSUtils\Utils\PassedParameters;
 use PHPCSUtils\Utils\TextStrings;
+use WordPressCS\WordPress\Helpers\ContextHelper;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Flag cron schedules less than 15 minutes.
  *
- * @link    https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#cron-schedules-less-than-15-minutes-or-expensive-events
+ * @link https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#cron-schedules-less-than-15-minutes-or-expensive-events
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.3.0
- * @since   0.11.0 - Extends the WordPressCS native `Sniff` class.
- *                 - Now deals correctly with WP time constants.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   0.14.0 The minimum cron interval tested against is now configurable.
- * @since   1.0.0  This sniff has been moved from the `VIP` category to the `WP` category.
+ * @since 0.3.0
+ * @since 0.11.0 - Extends the WordPressCS native `Sniff` class.
+ *               - Now deals correctly with WP time constants.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.14.0 The minimum cron interval tested against is now configurable.
+ * @since 1.0.0  This sniff has been moved from the `VIP` category to the `WP` category.
  */
 final class CronIntervalSniff extends Sniff {
 
@@ -94,7 +93,7 @@ final class CronIntervalSniff extends Sniff {
 		}
 
 		// Check if the text was found within a function call to add_filter().
-		$functionPtr = $this->is_in_function_call( $stackPtr, $this->valid_functions );
+		$functionPtr = ContextHelper::is_in_function_call( $this->phpcsFile, $stackPtr, $this->valid_functions );
 		if ( false === $functionPtr ) {
 			return;
 		}
@@ -309,6 +308,8 @@ final class CronIntervalSniff extends Sniff {
 	 * Add warning about unclear cron schedule change.
 	 *
 	 * @param int $stackPtr The position of the current token in the stack.
+	 *
+	 * @return void
 	 */
 	public function confused( $stackPtr ) {
 		$this->phpcsFile->addWarning(
@@ -317,5 +318,4 @@ final class CronIntervalSniff extends Sniff {
 			'ChangeDetected'
 		);
 	}
-
 }

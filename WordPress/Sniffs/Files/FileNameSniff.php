@@ -12,28 +12,26 @@ namespace WordPressCS\WordPress\Sniffs\Files;
 use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\ObjectDeclarations;
 use PHPCSUtils\Utils\TextStrings;
-use WordPressCS\WordPress\Sniff;
 use WordPressCS\WordPress\Helpers\IsUnitTestTrait;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Ensures filenames do not contain underscores and where applicable are prefixed with `class-`.
  *
- * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#naming-conventions
+ * @link https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#naming-conventions
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.1.0
+ * @since 0.11.0 - This sniff will now also check for all lowercase file names.
+ *               - This sniff will now also verify that files containing a class start with `class-`.
+ *               - This sniff will now also verify that files in `wp-includes` containing
+ *                 template tags end in `-template`. Based on @subpackage file DocBlock tag.
+ *               - This sniff will now allow for underscores in file names for certain theme
+ *                 specific exceptions if the `$is_theme` property is set to `true`.
+ * @since 0.12.0 Now extends the WordPressCS native `Sniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 3.0.0  Test class files are now completely exempt from this rule.
  *
- * @since   0.1.0
- * @since   0.11.0 - This sniff will now also check for all lowercase file names.
- *                 - This sniff will now also verify that files containing a class start with `class-`.
- *                 - This sniff will now also verify that files in `wp-includes` containing
- *                   template tags end in `-template`. Based on @subpackage file DocBlock tag.
- *                 - This sniff will now allow for underscores in file names for certain theme
- *                   specific exceptions if the `$is_theme` property is set to `true`.
- * @since   0.12.0 Now extends the WordPressCS native `Sniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   3.0.0  Test class files are now completely exempt from this rule.
- *
- * @uses    \WordPressCS\WordPress\Helpers\IsUnitTestTrait::$custom_test_classes
+ * @uses \WordPressCS\WordPress\Helpers\IsUnitTestTrait::$custom_test_classes
  */
 final class FileNameSniff extends Sniff {
 
@@ -96,27 +94,39 @@ final class FileNameSniff extends Sniff {
 	/**
 	 * Historical exceptions in WP core to the class name rule.
 	 *
+	 * Note: these files were renamed to comply with the naming conventions in
+	 * WP 6.1.0.
+	 * This means we no longer need to make an exception for them in the
+	 * `check_filename_has_class_prefix()` check, however, we do still need to
+	 * make an exception in the `check_filename_is_hyphenated()` check.
+	 *
 	 * @since 0.11.0
+	 * @since 3.0.0  Property has been renamed from `$class_exceptions` to `$hyphenation_exceptions`,
 	 *
 	 * @var array
 	 */
-	private $class_exceptions = array(
+	private $hyphenation_exceptions = array(
 		'class.wp-dependencies.php' => true,
 		'class.wp-scripts.php'      => true,
 		'class.wp-styles.php'       => true,
+		'functions.wp-scripts.php'  => true,
+		'functions.wp-styles.php'   => true,
 	);
 
 	/**
 	 * Unit test version of the historical exceptions in WP core.
 	 *
 	 * @since 0.11.0
+	 * @since 3.0.0  Property has been renamed from `$unittest_class_exceptions` to `$unittest_hyphenation_exceptions`,
 	 *
 	 * @var array
 	 */
-	private $unittest_class_exceptions = array(
+	private $unittest_hyphenation_exceptions = array(
 		'class.wp-dependencies.inc' => true,
 		'class.wp-scripts.inc'      => true,
 		'class.wp-styles.inc'       => true,
+		'functions.wp-scripts.inc'  => true,
+		'functions.wp-styles.inc'   => true,
 	);
 
 	/**
@@ -126,7 +136,7 @@ final class FileNameSniff extends Sniff {
 	 */
 	public function register() {
 		if ( \defined( '\PHP_CODESNIFFER_IN_TESTS' ) ) {
-			$this->class_exceptions += $this->unittest_class_exceptions;
+			$this->hyphenation_exceptions += $this->unittest_hyphenation_exceptions;
 		}
 
 		return Collections::phpOpenTags();
@@ -144,7 +154,7 @@ final class FileNameSniff extends Sniff {
 		// Usage of `stripQuotes` is to ensure `stdin_path` passed by IDEs does not include quotes.
 		$file = TextStrings::stripQuotes( $this->phpcsFile->getFileName() );
 		if ( 'STDIN' === $file ) {
-			return;
+			return $this->phpcsFile->numTokens;
 		}
 
 		$class_ptr = $this->phpcsFile->findNext( \T_CLASS, $stackPtr );
@@ -153,7 +163,7 @@ final class FileNameSniff extends Sniff {
 			 * This rule should not be applied to test classes (at all).
 			 * @link https://github.com/WordPress/WordPress-Coding-Standards/issues/1995
 			 */
-			return;
+			return $this->phpcsFile->numTokens;
 		}
 
 		// Respect phpcs:disable comments as long as they are not accompanied by an enable.
@@ -174,7 +184,7 @@ final class FileNameSniff extends Sniff {
 
 				if ( false === $i ) {
 					// The entire (rest of the) file is disabled.
-					return;
+					return $this->phpcsFile->numTokens;
 				}
 			}
 		}
@@ -194,7 +204,7 @@ final class FileNameSniff extends Sniff {
 		}
 
 		// Only run this sniff once per file, no need to run it again.
-		return ( $this->phpcsFile->numTokens + 1 );
+		return $this->phpcsFile->numTokens;
 	}
 
 	/**
@@ -207,8 +217,13 @@ final class FileNameSniff extends Sniff {
 	 * @return void
 	 */
 	protected function check_filename_is_hyphenated( $file_name ) {
-		$expected = strtolower( str_replace( '_', '-', $file_name ) );
-		if ( $file_name === $expected ) {
+		$extension = strrchr( $file_name, '.' );
+		$name      = substr( $file_name, 0, ( strlen( $file_name ) - strlen( $extension ) ) );
+
+		$expected = strtolower( preg_replace( '`[[:punct:]]`', '-', $name ) ) . $extension;
+		if ( $file_name === $expected
+			|| isset( $this->hyphenation_exceptions[ $file_name ] )
+		) {
 			return;
 		}
 
@@ -237,12 +252,11 @@ final class FileNameSniff extends Sniff {
 	 * @return void
 	 */
 	protected function check_filename_has_class_prefix( $class_ptr, $file_name ) {
+		$extension  = strrchr( $file_name, '.' );
 		$class_name = ObjectDeclarations::getName( $this->phpcsFile, $class_ptr );
-		$expected   = 'class-' . strtolower( str_replace( '_', '-', $class_name ) );
+		$expected   = 'class-' . strtolower( str_replace( '_', '-', $class_name ) ) . $extension;
 
-		if ( substr( $file_name, 0, -4 ) === $expected
-			|| isset( $this->class_exceptions[ $file_name ] )
-		) {
+		if ( $file_name === $expected ) {
 			return;
 		}
 
@@ -251,7 +265,7 @@ final class FileNameSniff extends Sniff {
 			0,
 			'InvalidClassFileName',
 			array(
-				$expected . '.php',
+				$expected,
 				$file_name,
 			)
 		);

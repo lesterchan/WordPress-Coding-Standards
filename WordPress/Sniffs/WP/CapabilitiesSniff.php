@@ -22,11 +22,9 @@ use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
  *
  * User capabilities should be used, not roles or deprecated capabilities.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 3.0.0
  *
- * @since   3.0.0
- *
- * @uses    \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
+ * @uses \WordPressCS\WordPress\Helpers\MinimumWPVersionTrait::$minimum_wp_version
  */
 final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 
@@ -59,7 +57,7 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @var array<string, array> The key is the name of a function we're targetting,
+	 * @var array<string, array> The key is the name of a function we're targeting,
 	 *                           the value is an array containing the 1-based parameter position
 	 *                           of the "capability" parameter within the function, as well as
 	 *                           the name of the parameter as declared in the function.
@@ -154,7 +152,7 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @var array<string, bool> Role available in WP Core.
+	 * @var array<string, true> Key is role available in WP Core, value irrelevant.
 	 */
 	private $core_roles = array(
 		'super_admin'   => true,
@@ -179,7 +177,7 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @var array<string, bool> All capabilities available in core.
+	 * @var array<string, true> All capabilities available in core.
 	 */
 	private $core_capabilities = array(
 		'activate_plugin'             => true,
@@ -351,15 +349,15 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 	 * @since 3.0.0
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
-	 * @param array  $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $group_name      The name of the group which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
 	 */
 	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
-		$function_name_lc = strtolower( $matched_content );
-		$function_details = $this->target_functions[ $function_name_lc ];
+		$function_details = $this->target_functions[ $matched_content ];
 
 		$parameter = PassedParameters::getParameterFromStack(
 			$parameters,
@@ -434,7 +432,7 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 		}
 
 		if ( isset( $this->deprecated_capabilities[ $matched_parameter ] ) ) {
-			$this->set_minimum_wp_version( $this->phpcsFile );
+			$this->set_minimum_wp_version();
 			$is_error = $this->wp_version_compare( $this->deprecated_capabilities[ $matched_parameter ], $this->minimum_wp_version, '<' );
 
 			$data = array(
@@ -477,5 +475,4 @@ final class CapabilitiesSniff extends AbstractFunctionParameterSniff {
 			)
 		);
 	}
-
 }

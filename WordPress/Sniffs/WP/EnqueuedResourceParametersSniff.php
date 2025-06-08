@@ -25,8 +25,6 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * @link https://developer.wordpress.org/reference/functions/wp_register_style/
  * @link https://developer.wordpress.org/reference/functions/wp_enqueue_style/
  *
- * @package WPCS\WordPressCodingStandards
- *
  * @since 1.0.0
  */
 final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSniff {
@@ -45,7 +43,7 @@ final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSni
 	 *
 	 * @since 1.0.0
 	 *
-	 * @var array <string function_name> => <bool true>
+	 * @var array<string, true> Key is function name, value irrelevant.
 	 */
 	protected $target_functions = array(
 		'wp_register_script' => true,
@@ -59,7 +57,7 @@ final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSni
 	 *
 	 * This array is enriched with the $emptyTokens array in the register() method.
 	 *
-	 * @var array
+	 * @var array<int|string, int|string>
 	 */
 	private $false_tokens = array(
 		\T_FALSE => \T_FALSE,
@@ -70,7 +68,7 @@ final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSni
 	 *
 	 * This array is enriched with the several of the PHPCS token arrays in the register() method.
 	 *
-	 * @var array
+	 * @var array<int|string, int|string>
 	 */
 	private $safe_tokens = array(
 		\T_NULL                     => \T_NULL,
@@ -114,7 +112,8 @@ final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSni
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
@@ -135,6 +134,9 @@ final class EnqueuedResourceParametersSniff extends AbstractFunctionParameterSni
 		$error_ptr = $stackPtr;
 		if ( false !== $version_param ) {
 			$error_ptr = $this->phpcsFile->findNext( Tokens::$emptyTokens, $version_param['start'], ( $version_param['end'] + 1 ), true );
+			if ( false === $error_ptr ) {
+				$error_ptr = $version_param['start'];
+			}
 		}
 
 		if ( false === $version_param || 'null' === $version_param['clean'] ) {

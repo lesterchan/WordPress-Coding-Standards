@@ -12,26 +12,24 @@ namespace WordPressCS\WordPress\Sniffs\NamingConventions;
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\AbstractVariableSniff as PHPCS_AbstractVariableSniff;
 use PHP_CodeSniffer\Util\Tokens;
-use PHPCSUtils\Tokens\Collections;
 use PHPCSUtils\Utils\Scopes;
 use PHPCSUtils\Utils\TextStrings;
 use PHPCSUtils\Utils\Variables;
+use WordPressCS\WordPress\Helpers\ContextHelper;
 use WordPressCS\WordPress\Helpers\RulesetPropertyHelper;
 use WordPressCS\WordPress\Helpers\SnakeCaseHelper;
 
 /**
  * Checks the naming of variables and member variables.
  *
- * @link    https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#naming-conventions
+ * @link https://developer.wordpress.org/coding-standards/wordpress-coding-standards/php/#naming-conventions
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.9.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   2.0.0  Now offers name suggestions for variables in violation.
+ * @since 0.9.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 2.0.0  Now offers name suggestions for variables in violation.
  *
  * Last synced with base class January 2022 at commit 4b49a952bf0e2c3863d0a113256bae0d7fe63d52.
- * @link    https://github.com/squizlabs/PHP_CodeSniffer/blob/master/src/Standards/Squiz/Sniffs/NamingConventions/ValidVariableNameSniff.php
+ * @link https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/master/src/Standards/Squiz/Sniffs/NamingConventions/ValidVariableNameSniff.php
  */
 final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 
@@ -66,12 +64,12 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 	 * @var array
 	 */
 	protected $allowed_mixed_case_member_var_names = array(
-		'ID'                => true,
-		'comment_ID'        => true,
-		'comment_post_ID'   => true,
-		'post_ID'           => true,
-		'comment_author_IP' => true,
 		'cat_ID'            => true,
+		'comment_ID'        => true,
+		'comment_author_IP' => true,
+		'comment_post_ID'   => true,
+		'ID'                => true,
+		'post_ID'           => true,
 	);
 
 	/**
@@ -80,7 +78,7 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 	 * @since 0.11.0
 	 * @since 3.0.0  Renamed from `$customPropertiesWhitelist` to `$allowed_custom_properties`.
 	 *
-	 * @var string|string[]
+	 * @var string[]
 	 */
 	public $allowed_custom_properties = array();
 
@@ -102,38 +100,38 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 	/**
 	 * Processes this test, when one of its tokens is encountered.
 	 *
-	 * @param \PHP_CodeSniffer\Files\File $phpcs_file The file being scanned.
-	 * @param int                         $stack_ptr  The position of the current token in the
-	 *                                                stack passed in $tokens.
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int                         $stackPtr  The position of the current token in the
+	 *                                               stack passed in $tokens.
 	 *
 	 * @return void
 	 */
-	protected function processVariable( File $phpcs_file, $stack_ptr ) {
-		$tokens = $phpcs_file->getTokens();
+	protected function processVariable( File $phpcsFile, $stackPtr ) {
+		$tokens = $phpcsFile->getTokens();
 
 		// If it's a php reserved var, then its ok.
-		if ( Variables::isPHPReservedVarName( $tokens[ $stack_ptr ]['content'] ) ) {
+		if ( Variables::isPHPReservedVarName( $tokens[ $stackPtr ]['content'] ) ) {
 			return;
 		}
 
 		// Merge any custom variables with the defaults.
 		$this->merge_allow_lists();
 
-		$var_name = ltrim( $tokens[ $stack_ptr ]['content'], '$' );
+		$var_name = ltrim( $tokens[ $stackPtr ]['content'], '$' );
 
 		// Likewise if it is a mixed-case var used by WordPress core.
 		if ( isset( $this->wordpress_mixed_case_vars[ $var_name ] ) ) {
 			return;
 		}
 
-		$obj_operator = $phpcs_file->findNext( Tokens::$emptyTokens, ( $stack_ptr + 1 ), null, true );
+		$obj_operator = $phpcsFile->findNext( Tokens::$emptyTokens, ( $stackPtr + 1 ), null, true );
 		if ( \T_OBJECT_OPERATOR === $tokens[ $obj_operator ]['code']
 			|| \T_NULLSAFE_OBJECT_OPERATOR === $tokens[ $obj_operator ]['code']
 		) {
 			// Check to see if we are using a variable from an object.
-			$var = $phpcs_file->findNext( Tokens::$emptyTokens, ( $obj_operator + 1 ), null, true );
+			$var = $phpcsFile->findNext( Tokens::$emptyTokens, ( $obj_operator + 1 ), null, true );
 			if ( \T_STRING === $tokens[ $var ]['code'] ) {
-				$bracket = $phpcs_file->findNext( Tokens::$emptyTokens, ( $var + 1 ), null, true );
+				$bracket = $phpcsFile->findNext( Tokens::$emptyTokens, ( $var + 1 ), null, true );
 				if ( \T_OPEN_PARENTHESIS !== $tokens[ $bracket ]['code'] ) {
 					$obj_var_name = $tokens[ $var ]['content'];
 
@@ -148,15 +146,14 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 							$obj_var_name,
 							$suggested_name,
 						);
-						$phpcs_file->addError( $error, $var, 'UsedPropertyNotSnakeCase', $data );
+						$phpcsFile->addError( $error, $var, 'UsedPropertyNotSnakeCase', $data );
 					}
 				}
 			}
 		}
 
-		$in_class     = false;
-		$obj_operator = $phpcs_file->findPrevious( Tokens::$emptyTokens, ( $stack_ptr - 1 ), null, true );
-		if ( isset( Collections::objectOperators()[ $tokens[ $obj_operator ]['code'] ] ) ) {
+		$in_class = false;
+		if ( ContextHelper::has_object_operator_before( $phpcsFile, $stackPtr ) === true ) {
 			// The variable lives within a class, and is referenced like
 			// this: MyClass::$_variable or $class->variable.
 			$in_class = true;
@@ -177,7 +174,7 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 					$var_name,
 					$suggested_name,
 				);
-				$phpcs_file->addError( $error, $stack_ptr, $error_name, $data );
+				$phpcsFile->addError( $error, $stackPtr, $error_name, $data );
 			}
 		}
 	}
@@ -185,23 +182,23 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 	/**
 	 * Processes class member variables.
 	 *
-	 * @param \PHP_CodeSniffer\Files\File $phpcs_file The file being scanned.
-	 * @param int                         $stack_ptr  The position of the current token in the
-	 *                                                stack passed in $tokens.
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int                         $stackPtr  The position of the current token in the
+	 *                                               stack passed in $tokens.
 	 *
 	 * @return void
 	 */
-	protected function processMemberVar( File $phpcs_file, $stack_ptr ) {
+	protected function processMemberVar( File $phpcsFile, $stackPtr ) {
 		// Make sure this is actually an OO property and not an OO method parameter or illegal property declaration.
-		if ( Scopes::isOOProperty( $phpcs_file, $stack_ptr ) === false ) {
+		if ( Scopes::isOOProperty( $phpcsFile, $stackPtr ) === false ) {
 			return;
 		}
 
 		// Merge any custom variables with the defaults.
 		$this->merge_allow_lists();
 
-		$tokens   = $phpcs_file->getTokens();
-		$var_name = ltrim( $tokens[ $stack_ptr ]['content'], '$' );
+		$tokens   = $phpcsFile->getTokens();
+		$var_name = ltrim( $tokens[ $stackPtr ]['content'], '$' );
 
 		if ( isset( $this->allowed_mixed_case_member_var_names[ $var_name ] ) ) {
 			return;
@@ -214,24 +211,24 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 				$var_name,
 				$suggested_name,
 			);
-			$phpcs_file->addError( $error, $stack_ptr, 'PropertyNotSnakeCase', $data );
+			$phpcsFile->addError( $error, $stackPtr, 'PropertyNotSnakeCase', $data );
 		}
 	}
 
 	/**
 	 * Processes the variables found within a double quoted string.
 	 *
-	 * @param \PHP_CodeSniffer\Files\File $phpcs_file The file being scanned.
-	 * @param int                         $stack_ptr  The position of the double quoted
-	 *                                                string.
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int                         $stackPtr  The position of the double quoted
+	 *                                               string.
 	 *
 	 * @return void
 	 */
-	protected function processVariableInString( File $phpcs_file, $stack_ptr ) {
-		$tokens = $phpcs_file->getTokens();
+	protected function processVariableInString( File $phpcsFile, $stackPtr ) {
+		$tokens = $phpcsFile->getTokens();
 
 		// There will always be embeds if the processVariableInString() was called.
-		$embeds = TextStrings::getEmbeds( $tokens[ $stack_ptr ]['content'] );
+		$embeds = TextStrings::getEmbeds( $tokens[ $stackPtr ]['content'] );
 
 		// Merge any custom variables with the defaults.
 		$this->merge_allow_lists();
@@ -260,7 +257,7 @@ final class ValidVariableNameSniff extends PHPCS_AbstractVariableSniff {
 						$var_name,
 						$suggested_name,
 					);
-					$phpcs_file->addError( $error, $stack_ptr, 'InterpolatedVariableNotSnakeCase', $data );
+					$phpcsFile->addError( $error, $stackPtr, 'InterpolatedVariableNotSnakeCase', $data );
 				}
 			}
 		}

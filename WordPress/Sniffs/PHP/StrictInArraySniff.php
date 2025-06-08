@@ -15,15 +15,13 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 /**
  * Flag calling in_array(), array_search() and array_keys() without true as the third parameter.
  *
- * @package WPCS\WordPressCodingStandards
- *
- * @since   0.9.0
- * @since   0.10.0 - This sniff not only checks for `in_array()`, but also `array_search()`
- *                   and `array_keys()`.
- *                 - The sniff no longer needlessly extends the `ArrayAssignmentRestrictionsSniff`
- *                   class which it didn't use.
- * @since   0.11.0 Refactored to extend the new WordPressCS native `AbstractFunctionParameterSniff` class.
- * @since   0.13.0 Class name changed: this class is now namespaced.
+ * @since 0.9.0
+ * @since 0.10.0 - This sniff not only checks for `in_array()`, but also `array_search()`
+ *                 and `array_keys()`.
+ *               - The sniff no longer needlessly extends the `ArrayAssignmentRestrictionsSniff`
+ *                 class which it didn't use.
+ * @since 0.11.0 Refactored to extend the new WordPressCS native `AbstractFunctionParameterSniff` class.
+ * @since 0.13.0 Class name changed: this class is now namespaced.
  */
 final class StrictInArraySniff extends AbstractFunctionParameterSniff {
 
@@ -77,7 +75,8 @@ final class StrictInArraySniff extends AbstractFunctionParameterSniff {
 	 *
 	 * @param int    $stackPtr        The position of the current token in the stack.
 	 * @param string $group_name      The name of the group which was matched.
-	 * @param string $matched_content The token content (function name) which was matched.
+	 * @param string $matched_content The token content (function name) which was matched
+	 *                                in lowercase.
 	 * @param array  $parameters      Array with information about the parameters.
 	 *
 	 * @return void
@@ -94,8 +93,8 @@ final class StrictInArraySniff extends AbstractFunctionParameterSniff {
 		 * this code will need to be adjusted to handle those.
 		 */
 		if ( false === $param_info['always_needed'] ) {
-			$has_search = PassedParameters::getParameterFromStack( $parameters, 2, 'filter_value' );
-			if ( false === $has_search ) {
+			$has_filter_value = PassedParameters::getParameterFromStack( $parameters, 2, 'filter_value' );
+			if ( false === $has_filter_value ) {
 				return;
 			}
 		}

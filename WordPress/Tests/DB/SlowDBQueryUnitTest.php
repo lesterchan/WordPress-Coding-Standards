@@ -14,18 +14,19 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 /**
  * Unit test class for the SlowDBQuery sniff.
  *
- * @package WPCS\WordPressCodingStandards
+ * @since 0.3.0
+ * @since 0.13.0 Class name changed: this class is now namespaced.
+ * @since 1.0.0  This sniff has been moved from the `VIP` category to the `DB` category.
  *
- * @since   0.3.0
- * @since   0.13.0 Class name changed: this class is now namespaced.
- * @since   1.0.0  This sniff has been moved from the `VIP` category to the `DB` category.
+ * @covers \WordPressCS\WordPress\AbstractArrayAssignmentRestrictionsSniff
+ * @covers \WordPressCS\WordPress\Sniffs\DB\SlowDBQuerySniff
  */
 final class SlowDBQueryUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
 	 *
-	 * @return array <int line number> => <int number of errors>
+	 * @return array<int, int> Key is the line number, value is the number of expected errors.
 	 */
 	public function getErrorList() {
 		return array();
@@ -34,7 +35,7 @@ final class SlowDBQueryUnitTest extends AbstractSniffUnitTest {
 	/**
 	 * Returns the lines where warnings should occur.
 	 *
-	 * @return array <int line number> => <int number of warnings>
+	 * @return array<int, int> Key is the line number, value is the number of expected warnings.
 	 */
 	public function getWarningList() {
 		return array(
@@ -43,7 +44,9 @@ final class SlowDBQueryUnitTest extends AbstractSniffUnitTest {
 			15 => 1,
 			16 => 1,
 			19 => 2,
+			25 => 2,
+			26 => 2,
+			27 => 2,
 		);
 	}
-
 }
