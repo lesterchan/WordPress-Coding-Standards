@@ -30,10 +30,17 @@ phpinfo(); // Ok - within excluded group.
 
 // Reset group exclusions.
 // phpcs:set WordPress.PHP.DevelopmentFunctions exclude[]
-trigger_error(); // Error.
+\TRIGGER_ERROR(); // Error.
 phpinfo(); // Error.
 
 Wrapper_Class::var_dump(); // OK, not the native PHP function.
 $wrapper ->var_dump(); // OK, not the native PHP function.
-namespace\var_dump(); // OK as long as the file is namespaced.
-MyNamespace\var_dump(); // OK, namespaced function.
+
+/*
+ * Safeguard correct handling of all types of namespaced function calls.
+ */
+\var_dump( $value );
+MyNamespace\phpinfo();
+\MyNamespace\print_r( $value );
+namespace\error_reporting(); // The sniff should start flagging this once it can resolve relative namespaces.
+namespace\Sub\debug_backtrace();

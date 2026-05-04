@@ -23,8 +23,8 @@ prefix_mysql_info(); // Ok.
 
 // MYSQL Extension.
 mysql_affected_rows();
-mysql_connect();
-mysql_close();
+Mysql_CONNECT();
+\MYSQL_close();
 mysql_fetch_row();
 mysql_info();
 mysql_numrows();
@@ -94,3 +94,12 @@ WP_Date_Query::build_mysql_datetime(); // Ok.
 myFictionFunction(); // Bad.
 myFictional(); // OK.
 Myfictional(); // OK.
+
+/*
+ * Safeguard correct handling of all types of namespaced function calls.
+ */
+\mysql_connect();
+MyNamespace\mysqli_init();
+\MyNamespace\mysqlnd_qc_clear_cache();
+namespace\maxdb_close(); // The sniff should start flagging this once it can resolve relative namespaces.
+namespace\Sub\mysqli_fetch();

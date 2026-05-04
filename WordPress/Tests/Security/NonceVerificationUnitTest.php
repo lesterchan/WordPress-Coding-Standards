@@ -18,10 +18,6 @@ use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
  * @since 0.13.0 Class name changed: this class is now namespaced.
  * @since 1.0.0  This sniff has been moved from the `CSRF` category to the `Security` category.
  *
- * @covers \WordPressCS\WordPress\Helpers\ContextHelper::is_in_function_call
- * @covers \WordPressCS\WordPress\Helpers\ContextHelper::is_in_type_test
- * @covers \WordPressCS\WordPress\Helpers\ContextHelper::is_in_isset_or_empty
- * @covers \WordPressCS\WordPress\Helpers\ContextHelper::is_in_array_comparison
  * @covers \WordPressCS\WordPress\Sniffs\Security\NonceVerificationSniff
  */
 final class NonceVerificationUnitTest extends AbstractSniffUnitTest {
@@ -74,6 +70,23 @@ final class NonceVerificationUnitTest extends AbstractSniffUnitTest {
 					453 => 1,
 					470 => 1,
 					478 => 1,
+					524 => 2,
+					537 => 1,
+					545 => 1,
+					557 => 1,
+					565 => 1,
+					593 => 1,
+					601 => 1,
+					602 => 1,
+					603 => 1,
+					628 => 1,
+					636 => 1,
+					637 => 1,
+					638 => 1,
+					680 => 1,
+					686 => 1,
+					687 => 1,
+					688 => 1,
 				);
 
 			case 'NonceVerificationUnitTest.2.inc':
@@ -106,6 +119,10 @@ final class NonceVerificationUnitTest extends AbstractSniffUnitTest {
 				return array(
 					365 => 1,
 					379 => 1,
+					653 => 1,
+					659 => 1,
+					660 => 1,
+					661 => 1,
 				);
 
 			case 'NonceVerificationUnitTest.4.inc':

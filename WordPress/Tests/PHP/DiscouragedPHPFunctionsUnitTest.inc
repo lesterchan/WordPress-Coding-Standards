@@ -5,9 +5,9 @@
 
 
 
-
 serialize(); // Warning.
-unserialize(); // Warning.
+\serialize( $value ); // Warning.
+UNserialize(); // Warning.
 
 urlencode(); // Warning.
 rawurlencode(); // Ok.
@@ -19,7 +19,7 @@ ini_restore(); // Warning.
 magic_quotes_runtime(); // Warning.
 set_magic_quotes_runtime(); // Warning.
 apache_setenv(); // Warning.
-putenv(); // Warning.
+\PUTENV(); // Warning.
 set_include_path(); // Warning.
 restore_include_path(); // Warning.
 
@@ -41,3 +41,11 @@ $handle = popen( '/bin/ls', 'r' );
 // Issue #898.
 class System {}
 class Serialize {}
+
+/*
+ * Safeguard correct handling of all types of namespaced function calls.
+ */
+MyNamespace\urlencode( $value );
+\MyNamespace\putenv( $value );
+namespace\exec( $command ); // The sniff should start flagging this once it can resolve relative namespaces.
+namespace\Sub\base64_decode( $value );

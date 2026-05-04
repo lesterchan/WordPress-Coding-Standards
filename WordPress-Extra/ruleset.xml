@@ -28,6 +28,8 @@
 			<property name="allowMultiline" value="true"/>
 		</properties>
 	</rule>
+	<rule ref="Generic.Strings.UnnecessaryHeredoc"/>
+	<rule ref="Generic.WhiteSpace.HereNowdocIdentifierSpacing"/>
 
 	<!-- More generic PHP best practices.
 		 https://github.com/WordPress/WordPress-Coding-Standards/issues/607 -->
@@ -199,5 +201,11 @@
 
 	<!-- Check for single blank line after namespace declaration. -->
 	<rule ref="PSR2.Namespaces.NamespaceDeclaration"/>
+
+	<!-- Do not allow spacing inside the brackets for attributes. -->
+	<rule ref="Universal.Attributes.BracketSpacing"/>
+
+	<!-- Forbid parentheses for attribute instantiations without parameters. -->
+	<rule ref="Universal.Attributes.DisallowAttributeParentheses"/>
 
 </ruleset>
