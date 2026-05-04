@@ -18,6 +18,7 @@
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundIfWithInlineHTML"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundWhileWithInlineHTML"/>
 		<exclude name="Universal.ControlStructures.IfElseDeclaration.NoNewLine"/>
+		<exclude name="Universal.Lists.DisallowShortListSyntax.Found"/>
 		<exclude name="Universal.Operators.DisallowShortTernary.Found"/>
 		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement.PostIncrementFound"/>
 		<exclude name="Universal.UseStatements.DisallowUseClass.FoundWithoutAlias"/>
