@@ -10,8 +10,18 @@
 	</rule>
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress-Extra"/>
+	<!--
+		Universal ships several deliberately either/or sniff pairs (Disallow*
+		vs Require*), and enabling the whole standard turns both halves on, so
+		the construct is unwritable either way. Each exclusion below picks the
+		half the codebase actually follows.
+	-->
 	<rule ref="Universal">
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+		<!-- Bare `#[Attr]` over `#[Attr()]`, matching the exit/die choice below. -->
+		<exclude name="Universal.Attributes.RequireAttributeParentheses.Missing"/>
+		<!-- `new class() {}`, as written throughout tests/. -->
+		<exclude name="Universal.Classes.DisallowAnonClassParentheses.Found"/>
 		<exclude name="Universal.Classes.RequireFinalClass.NonFinalClassFound"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundElseWithInlineHTML"/>
 		<exclude name="Universal.ControlStructures.DisallowAlternativeSyntax.FoundForeachWithInlineHTML"/>
@@ -21,6 +31,8 @@
 		<exclude name="Universal.Lists.DisallowShortListSyntax.Found"/>
 		<exclude name="Universal.Operators.DisallowShortTernary.Found"/>
 		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement.PostIncrementFound"/>
+		<!-- Bare `exit;`, as WordPress core and the nineteen plugins write the ABSPATH guard. -->
+		<exclude name="Universal.PHP.RequireExitDieParentheses.Missing"/>
 		<exclude name="Universal.UseStatements.DisallowUseClass.FoundWithoutAlias"/>
 	</rule>
 </ruleset>
